@@ -53,4 +53,4 @@ jobs:
                   username: ${{ secrets.USERNAME }}
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
                   script_stop: true
-                  script: docker pull hdanylo/auction-backend && docker run -p 3000:3000 hdanylo/auction-backend
+                  script: docker pull hdanylo/auction-backend && docker run -p 3000:3000 -e DATABASE_URL="${{ secrets.DATABASE_URL }}" -e TOKEN_SECRET="${{ secrets.TOKEN_SECRET }}" -e TOKEN_EXPIRES_IN="${{ secrets.TOKEN_EXPIRES_IN }}" hdanylo/auction-backend
