@@ -1,5 +1,6 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
+import { ResponseBody } from 'src/entities/framework/ResponseBody';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -15,15 +16,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
                 ? exception.getStatus()
                 : HttpStatus.INTERNAL_SERVER_ERROR;
 
-        const errors =
+        const errors: ResponseBody['errors'] =
             exception instanceof HttpException
-                ? [{ statusCode: httpStatus, message: exception.message }]
-                : {
-                      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-                      message: 'Internal server error',
-                  };
+                ? [{ statusCode: httpStatus as HttpStatus, message: exception.message }]
+                : [
+                      {
+                          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                          message: 'Internal server error',
+                      },
+                  ];
 
-        const responseBody = {
+        const responseBody: ResponseBody = {
             errors,
             result: false,
             data: null,
