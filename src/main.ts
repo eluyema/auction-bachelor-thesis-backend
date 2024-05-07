@@ -7,7 +7,7 @@ async function bootstrap() {
         rawBody: true,
     });
     app.useGlobalPipes(new ValidationPipe());
-    app.enableCors();
+    app.enableCors({ origin: ['http://localhost', 'https://online-auction.com.ua'] });
     await app.listen(3000);
 }
 bootstrap();
