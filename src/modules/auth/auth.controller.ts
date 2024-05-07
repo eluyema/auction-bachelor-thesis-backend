@@ -1,7 +1,8 @@
-import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegistrationDto } from './dtos/registrationDto';
 import { LoginDto } from './dtos/loginDto';
+import { RefreshDto } from './dtos/refreshDto';
 
 @Controller('auth')
 export class AuthController {
@@ -12,7 +13,7 @@ export class AuthController {
     async registration(@Body() dto: RegistrationDto) {
         await this.authService.registration(dto);
 
-        return 'Success registered';
+        return { message: 'Success registered' };
     }
 
     @Post('login')
@@ -21,8 +22,9 @@ export class AuthController {
         return this.authService.login(dto);
     }
 
-    @Get('just-test')
-    async justTest() {
-        return 'Hello world! Yeees, it works!';
+    @Post('refresh')
+    @HttpCode(200)
+    async refresh(@Body() dto: RefreshDto) {
+        return this.authService.refresh(dto.refreshToken);
     }
 }

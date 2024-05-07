@@ -1,4 +1,13 @@
-import { Body, Controller, Get, NotFoundException, Param, Put, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Get,
+    NotFoundException,
+    Param,
+    Put,
+    Request,
+    UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { FoundUserDto } from './dtos/foundUserDto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -6,6 +15,7 @@ import { AccessLevels } from '../auth/access-levels.decorator';
 import { AccessLevelGuard } from '../auth/access-level.guard';
 import { AccessLevel } from './users.entity';
 import { UpdateUserDto } from './dtos/updateUserDto';
+import { AuthRequest } from 'src/entities/framework/AuthRequest';
 
 @Controller('users')
 export class UsersController {
@@ -13,7 +23,7 @@ export class UsersController {
 
     @AccessLevels(AccessLevel.ADMIN)
     @UseGuards(JwtAuthGuard, AccessLevelGuard)
-    @Get('/:email')
+    @Get('/email/:email')
     async findByEmail(@Param('email') email) {
         const user = await this.usersService.findUserByEmail(email);
 
@@ -33,7 +43,7 @@ export class UsersController {
 
     @AccessLevels(AccessLevel.ADMIN)
     @UseGuards(JwtAuthGuard, AccessLevelGuard)
-    @Put('/:email')
+    @Put('/email/:email')
     async updateUser(@Body() dto: UpdateUserDto, @Param('email') email) {
         const user = await this.usersService.updateUser(email, dto);
 
@@ -49,5 +59,13 @@ export class UsersController {
         };
 
         return preparedUser;
+    }
+
+    @AccessLevels(AccessLevel.REGULAR, AccessLevel.MANAGER, AccessLevel.ADMIN)
+    @UseGuards(JwtAuthGuard, AccessLevelGuard)
+    @Get('/self')
+    async getSelfUser(@Request() req: AuthRequest) {
+        const user = req.user;
+        return user;
     }
 }

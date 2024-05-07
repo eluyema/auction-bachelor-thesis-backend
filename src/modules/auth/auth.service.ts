@@ -5,20 +5,24 @@ import { AccessLevel } from '../users/users.entity';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dtos/loginDto';
 import { JwtCodedUserData } from './auth.entity';
-import { sign } from 'jsonwebtoken';
+import { decode, sign, verify } from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
-    private tokenSecret: string = '';
-    private tokenExpiresIn: string = '';
+    private accessTokenSecret: string = '';
+    private accessTokenExpiresIn: string = '';
+    private refreshTokenSecret: string = '';
+    private refreshTokenExpiresIn: string = '';
 
     constructor(
         private usersService: UsersService,
         private configService: ConfigService,
     ) {
-        this.tokenSecret = this.configService.get<string>('tokenSecret');
-        this.tokenExpiresIn = this.configService.get<string>('tokenExpiresIn');
+        this.accessTokenSecret = this.configService.get<string>('accessTokenSecret');
+        this.accessTokenExpiresIn = this.configService.get<string>('accessTokenExpiresIn');
+        this.refreshTokenSecret = this.configService.get<string>('refreshTokenSecret');
+        this.refreshTokenExpiresIn = this.configService.get<string>('refreshTokenExpiresIn');
     }
 
     private async hashPassword(plaintextPassword: string) {
@@ -67,8 +71,70 @@ export class AuthService {
             accessLevel: foundUser.accessLevel,
         };
 
-        const token = sign(codedUserData, this.tokenSecret, { expiresIn: this.tokenExpiresIn });
+        const refreshToken = sign(codedUserData, this.refreshTokenSecret, {
+            expiresIn: this.refreshTokenExpiresIn,
+        });
 
-        return { token };
+        foundUser.refreshToken = refreshToken;
+
+        await this.usersService.updateUser(foundUser.email, foundUser);
+
+        const accessToken = sign(codedUserData, this.accessTokenSecret, {
+            expiresIn: this.accessTokenExpiresIn,
+        });
+
+        return { accessToken, refreshToken };
+    }
+
+    private verifyToken(token: string, secret: string) {
+        try {
+            verify(token, secret);
+            return true;
+        } catch (err) {
+            return false;
+        }
+    }
+
+    async refresh(refreshToken: string) {
+        const verified = this.verifyToken(refreshToken, this.refreshTokenSecret);
+
+        if (!verified) {
+            console.log(1);
+            throw new HttpException('Refresh token denied', HttpStatus.UNAUTHORIZED);
+        }
+
+        const decodedUser = decode(refreshToken) as JwtCodedUserData;
+
+        const foundUser = await this.usersService.findUserByEmail(decodedUser.email);
+
+        if (!foundUser) {
+            throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        }
+
+        if (foundUser.refreshToken !== refreshToken) {
+            console.log(2, foundUser.refreshToken, refreshToken);
+            throw new HttpException('Refresh token denied', HttpStatus.UNAUTHORIZED);
+        }
+
+        const codedUserData: JwtCodedUserData = {
+            id: foundUser.id,
+            email: foundUser.email,
+            name: foundUser.name,
+            accessLevel: foundUser.accessLevel,
+        };
+
+        const newRefreshToken = sign(codedUserData, this.refreshTokenSecret, {
+            expiresIn: this.refreshTokenExpiresIn,
+        });
+
+        foundUser.refreshToken = newRefreshToken;
+
+        await this.usersService.updateUser(foundUser.email, foundUser);
+
+        const accessToken = sign(codedUserData, this.accessTokenSecret, {
+            expiresIn: this.accessTokenExpiresIn,
+        });
+
+        return { accessToken, refreshToken };
     }
 }

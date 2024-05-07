@@ -25,4 +25,5 @@ model User {
   name         String
   passwordHash String
   accessLevel  AccessLevel @default(REGULAR)
+  refreshToken String?
 }

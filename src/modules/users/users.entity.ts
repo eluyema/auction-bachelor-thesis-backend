@@ -12,4 +12,5 @@ export class User {
     email: string;
     passwordHash: string;
     accessLevel: AccessLevelType;
+    refreshToken: string | null;
 }

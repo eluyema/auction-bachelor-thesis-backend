@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dtos/createUserDto';
 import { User } from './users.entity';
-import { UpdateUserDto } from './dtos/updateUserDto';
 import { FoundUserDto } from './dtos/foundUserDto';
 
 @Injectable()
@@ -24,7 +23,7 @@ export class UsersService {
         return createdUser;
     }
 
-    async updateUser(email: string, updateUserDto: UpdateUserDto): Promise<FoundUserDto | null> {
+    async updateUser(email: string, updateUserDto: Partial<User>): Promise<FoundUserDto | null> {
         const userToUpdateArr = await this.repository.getUsers({ where: { email } });
 
         if (!userToUpdateArr.length) {
@@ -41,6 +40,9 @@ export class UsersService {
         }
         if (updateUserDto.accessLevel) {
             userToUpdate.accessLevel = updateUserDto.accessLevel;
+        }
+        if (updateUserDto.refreshToken) {
+            userToUpdate.refreshToken = updateUserDto.refreshToken;
         }
 
         const updatedUser = await this.repository.updateUser({
