@@ -99,7 +99,6 @@ export class AuthService {
         const verified = this.verifyToken(refreshToken, this.refreshTokenSecret);
 
         if (!verified) {
-            console.log(1);
             throw new HttpException('Refresh token denied', HttpStatus.UNAUTHORIZED);
         }
 
@@ -112,7 +111,6 @@ export class AuthService {
         }
 
         if (foundUser.refreshToken !== refreshToken) {
-            console.log(2, foundUser.refreshToken, refreshToken);
             throw new HttpException('Refresh token denied', HttpStatus.UNAUTHORIZED);
         }
 
