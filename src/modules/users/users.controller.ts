@@ -16,6 +16,8 @@ import { AccessLevelGuard } from '../auth/access-level.guard';
 import { AccessLevel } from './users.entity';
 import { UpdateUserDto } from './dtos/updateUserDto';
 import { AuthRequest } from 'src/entities/framework/AuthRequest';
+import { ResponseBody } from 'src/entities/framework/ResponseBody';
+import { createResponseBody } from 'src/utils/createResponse';
 
 @Controller('users')
 export class UsersController {
@@ -24,7 +26,7 @@ export class UsersController {
     @AccessLevels(AccessLevel.ADMIN)
     @UseGuards(JwtAuthGuard, AccessLevelGuard)
     @Get('/email/:email')
-    async findByEmail(@Param('email') email) {
+    async findByEmail(@Param('email') email): Promise<ResponseBody> {
         const user = await this.usersService.findUserByEmail(email);
 
         if (user === null) {
@@ -38,13 +40,13 @@ export class UsersController {
             accessLevel: user.accessLevel,
         };
 
-        return { result: preparedUser };
+        return createResponseBody(preparedUser);
     }
 
     @AccessLevels(AccessLevel.ADMIN)
     @UseGuards(JwtAuthGuard, AccessLevelGuard)
     @Put('/email/:email')
-    async updateUser(@Body() dto: UpdateUserDto, @Param('email') email) {
+    async updateUser(@Body() dto: UpdateUserDto, @Param('email') email): Promise<ResponseBody> {
         const user = await this.usersService.updateUser(email, dto);
 
         if (user === null) {
@@ -58,7 +60,7 @@ export class UsersController {
             accessLevel: user.accessLevel,
         };
 
-        return { result: preparedUser };
+        return createResponseBody(preparedUser);
     }
 
     @AccessLevels(AccessLevel.REGULAR, AccessLevel.MANAGER, AccessLevel.ADMIN)
@@ -66,6 +68,7 @@ export class UsersController {
     @Get('/self')
     async getSelfUser(@Request() req: AuthRequest) {
         const user = req.user;
-        return { result: user };
+
+        return createResponseBody(user);
     }
 }
