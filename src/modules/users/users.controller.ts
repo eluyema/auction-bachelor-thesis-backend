@@ -67,8 +67,21 @@ export class UsersController {
     @UseGuards(JwtAuthGuard, AccessLevelGuard)
     @Get('/self')
     async getSelfUser(@Request() req: AuthRequest) {
-        const user = req.user;
+        const userData = req.user;
 
-        return createResponseBody(user);
+        const foundUser = await this.usersService.findUserByEmail(userData.email);
+
+        if (foundUser === null) {
+            throw new NotFoundException(`User with email ${userData.email} doesn't exist`);
+        }
+
+        const preparedUser: FoundUserDto = {
+            id: foundUser.id,
+            name: foundUser.name,
+            email: foundUser.email,
+            accessLevel: foundUser.accessLevel,
+        };
+
+        return createResponseBody(preparedUser);
     }
 }
