@@ -13,18 +13,20 @@ export class AuthController {
     async registration(@Body() dto: RegistrationDto) {
         await this.authService.registration(dto);
 
-        return { message: 'Success registered' };
+        return { result: { message: 'Success registered' } };
     }
 
     @Post('login')
     @HttpCode(200)
     async login(@Body() dto: LoginDto) {
-        return this.authService.login(dto);
+        const data = await this.authService.login(dto);
+        return { result: data };
     }
 
     @Post('refresh')
     @HttpCode(200)
     async refresh(@Body() dto: RefreshDto) {
-        return this.authService.refresh(dto.refreshToken);
+        const data = await this.authService.refresh(dto.refreshToken);
+        return { result: data };
     }
 }

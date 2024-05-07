@@ -38,7 +38,7 @@ export class UsersController {
             accessLevel: user.accessLevel,
         };
 
-        return preparedUser;
+        return { result: preparedUser };
     }
 
     @AccessLevels(AccessLevel.ADMIN)
@@ -58,7 +58,7 @@ export class UsersController {
             accessLevel: user.accessLevel,
         };
 
-        return preparedUser;
+        return { result: preparedUser };
     }
 
     @AccessLevels(AccessLevel.REGULAR, AccessLevel.MANAGER, AccessLevel.ADMIN)
@@ -66,6 +66,6 @@ export class UsersController {
     @Get('/self')
     async getSelfUser(@Request() req: AuthRequest) {
         const user = req.user;
-        return user;
+        return { result: user };
     }
 }

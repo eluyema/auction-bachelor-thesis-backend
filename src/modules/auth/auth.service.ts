@@ -45,6 +45,12 @@ export class AuthService {
             accessLevel: AccessLevel.REGULAR,
         };
 
+        const foundUser = await this.usersService.findUserByEmail(userDto.email);
+
+        if (foundUser) {
+            throw new HttpException('User with this email already exit', HttpStatus.CONFLICT);
+        }
+
         return this.usersService.createUser(userDto);
     }
 
