@@ -105,6 +105,7 @@ export class AuthService {
         const verified = this.verifyToken(refreshToken, this.refreshTokenSecret);
 
         if (!verified) {
+            console.log('NOT VERIFIED', refreshToken, this.refreshTokenSecret);
             throw new HttpException('Refresh token denied', HttpStatus.UNAUTHORIZED);
         }
 
@@ -117,6 +118,7 @@ export class AuthService {
         }
 
         if (foundUser.refreshToken !== refreshToken) {
+            console.log('NOT EQ', foundUser.refreshToken, refreshToken);
             throw new HttpException('Refresh token denied', HttpStatus.UNAUTHORIZED);
         }
 
@@ -139,6 +141,6 @@ export class AuthService {
             expiresIn: this.accessTokenExpiresIn,
         });
 
-        return { accessToken, refreshToken };
+        return { accessToken, refreshToken: newRefreshToken };
     }
 }

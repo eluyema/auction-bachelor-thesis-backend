@@ -44,6 +44,9 @@ export class UsersService {
         if (updateUserDto.accessLevel) {
             userToUpdate.accessLevel = updateUserDto.accessLevel;
         }
+        if (updateUserDto.refreshToken) {
+            userToUpdate.refreshToken = updateUserDto.refreshToken;
+        }
 
         const updatedUser = await this.repository.updateUser({
             data: userToUpdate,
