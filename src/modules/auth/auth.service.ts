@@ -101,15 +101,15 @@ export class AuthService {
         }
     }
 
-    async refresh(refreshToken: string) {
-        const verified = this.verifyToken(refreshToken, this.refreshTokenSecret);
+    async refresh(userRefreshToken: string) {
+        const verified = this.verifyToken(userRefreshToken, this.refreshTokenSecret);
 
         if (!verified) {
-            console.log('NOT VERIFIED', refreshToken, this.refreshTokenSecret);
+            console.log('NOT VERIFIED', userRefreshToken, this.refreshTokenSecret);
             throw new HttpException('Refresh token denied', HttpStatus.UNAUTHORIZED);
         }
 
-        const decodedUser = decode(refreshToken) as JwtCodedUserData;
+        const decodedUser = decode(userRefreshToken) as JwtCodedUserData;
 
         const foundUser = await this.usersService.findUserByEmail(decodedUser.email);
 
@@ -117,8 +117,8 @@ export class AuthService {
             throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
         }
 
-        if (foundUser.refreshToken !== refreshToken) {
-            console.log('NOT EQ', foundUser.refreshToken, refreshToken);
+        if (foundUser.refreshToken !== userRefreshToken) {
+            console.log('NOT EQ', foundUser.refreshToken, userRefreshToken);
             throw new HttpException('Refresh token denied', HttpStatus.UNAUTHORIZED);
         }
 
