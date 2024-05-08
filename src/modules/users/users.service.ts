@@ -23,7 +23,10 @@ export class UsersService {
         return createdUser;
     }
 
-    async updateUser(email: string, updateUserDto: Partial<User>): Promise<FoundUserDto | null> {
+    async updateUser(
+        email: string,
+        updateUserDto: Partial<Omit<User, 'id'>>,
+    ): Promise<FoundUserDto | null> {
         const userToUpdateArr = await this.repository.getUsers({ where: { email } });
 
         if (!userToUpdateArr.length) {
@@ -41,13 +44,10 @@ export class UsersService {
         if (updateUserDto.accessLevel) {
             userToUpdate.accessLevel = updateUserDto.accessLevel;
         }
-        if (updateUserDto.refreshToken) {
-            userToUpdate.refreshToken = updateUserDto.refreshToken;
-        }
 
         const updatedUser = await this.repository.updateUser({
             data: userToUpdate,
-            where: { email: userToUpdate.email },
+            where: { email },
         });
 
         const returnUser: FoundUserDto = {

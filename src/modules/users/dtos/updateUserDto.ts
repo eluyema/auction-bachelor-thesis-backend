@@ -1,5 +1,5 @@
-import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
-import { AccessLevelType } from '../users.entity';
+import { IsEmail, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { AccessLevel, AccessLevelType } from '../users.entity';
 
 export class UpdateUserDto {
     @IsOptional()
@@ -14,13 +14,6 @@ export class UpdateUserDto {
 
     @IsOptional()
     @IsString()
-    @MaxLength(50)
-    @MinLength(8)
-    password: string;
-
-    @IsOptional()
-    @IsString()
-    @MaxLength(50)
-    @MinLength(1)
+    @IsIn(Object.keys(AccessLevel))
     accessLevel: AccessLevelType;
 }

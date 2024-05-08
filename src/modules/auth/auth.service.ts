@@ -25,18 +25,18 @@ export class AuthService {
         this.refreshTokenExpiresIn = this.configService.get<string>('refreshTokenExpiresIn');
     }
 
-    private async hashPassword(plaintextPassword: string) {
+    static async hashPassword(plaintextPassword: string) {
         const hash = await bcrypt.hash(plaintextPassword, 10);
         return hash;
     }
 
-    private async comparePassword(plaintextPassword: string, hash: string) {
+    static async comparePassword(plaintextPassword: string, hash: string) {
         const result = await bcrypt.compare(plaintextPassword, hash);
         return result;
     }
 
     async registration(data: RegistrationDto) {
-        const passwordHash = await this.hashPassword(data.password);
+        const passwordHash = await AuthService.hashPassword(data.password);
 
         const userDto = {
             name: data.name,
@@ -61,7 +61,7 @@ export class AuthService {
             throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
         }
 
-        const isPasswordCorrect: boolean = await this.comparePassword(
+        const isPasswordCorrect: boolean = await AuthService.comparePassword(
             data.password,
             foundUser.passwordHash,
         );
