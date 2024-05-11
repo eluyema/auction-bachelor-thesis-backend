@@ -52,4 +52,36 @@ export class RoundsMapper {
 
         return preparedRounds;
     }
+
+    static getFirstBid(rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>) {
+        const allBids = rounds.map((round) => round.Bids).flat();
+
+        if (!allBids.length) {
+            return null;
+        }
+
+        const sortedBids = allBids.sort(
+            (a, b) => new Date(a.startAt).getDate() - new Date(b.startAt).getDate(),
+        );
+
+        const firstBid = sortedBids[0];
+
+        return firstBid;
+    }
+
+    static getLastBid(rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>) {
+        const allBids = rounds.map((round) => round.Bids).flat();
+
+        if (!allBids.length) {
+            return null;
+        }
+
+        const sortedBids = allBids.sort(
+            (a, b) => new Date(a.startAt).getDate() - new Date(b.startAt).getDate(),
+        );
+
+        const lastBid = sortedBids[sortedBids.length - 1];
+
+        return lastBid;
+    }
 }

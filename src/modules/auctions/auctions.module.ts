@@ -7,9 +7,10 @@ import { RoundsModule } from '../rounds/rounds.module';
 import { UsersModule } from '../users/users.module';
 import { BidsModule } from '../bids/bids.module';
 import { AuctionGateway } from './auctions.gateway';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-    imports: [PrismaModule, RoundsModule, UsersModule, BidsModule],
+    imports: [PrismaModule, RoundsModule, UsersModule, BidsModule, ScheduleModule.forRoot()],
     controllers: [AuctionsController],
     providers: [AuctionsService, AuctionsRepository, AuctionGateway],
     exports: [AuctionsService],

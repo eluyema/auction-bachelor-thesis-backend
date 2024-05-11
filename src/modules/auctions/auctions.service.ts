@@ -130,6 +130,18 @@ export class AuctionsService {
         return AuctionsMapper.mapToPublicView(auction, currentDate);
     }
 
+    async getNestedAuction(auctionId: string) {
+        const auction = await this.auctionsRepository.findAuctionWithRoundsBidsUsers({
+            auctionId,
+        });
+
+        if (!auction) {
+            return null;
+        }
+
+        return auction;
+    }
+
     async createInititalBid(dto: CreateInitialBidDto, userId: string, auctionId: string) {
         const auction = await this.auctionsRepository.findAuctionsWithRoundsAndBids({
             auctionId,
