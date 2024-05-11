@@ -91,4 +91,15 @@ export class BidsRepository {
             },
         });
     }
+
+    async getInitialBids(auctionId: string) {
+        return this.prisma.bid.findMany({
+            where: {
+                Round: {
+                    sequenceNumber: 0,
+                    auctionId,
+                },
+            },
+        });
+    }
 }

@@ -23,10 +23,15 @@ import { AuthRequest } from 'src/entities/framework';
 import { UpdateAuctionDto } from './dtos/UpdateAuctionDto';
 import { CreateInitialBidDto } from './dtos/CreateInitialBidDto';
 import { MakeBidDto } from './dtos/MakeBidDto';
+import { AuctionGateway } from './auctions.gateway';
 
 @Controller('auctions')
 export class AuctionsController {
-    constructor(private readonly auctionsService: AuctionsService) {}
+    constructor(
+        private readonly auctionsService: AuctionsService,
+
+        private auctionGateway: AuctionGateway,
+    ) {}
 
     @AccessLevels(AccessLevel.MANAGER, AccessLevel.ADMIN)
     @UseGuards(JwtAuthGuard, AccessLevelGuard)
@@ -162,7 +167,26 @@ export class AuctionsController {
         console.log(userData);
         const userId = userData.id;
         await this.auctionsService.makeUserBit(dto, userId, auctionId);
-
+        //maybe it's better to remove await :/
+        await this.auctionGateway.loadAndSendUpdatedRoundsEvent(auctionId);
         return createResponseBody('success');
+    }
+
+    @AccessLevels(AccessLevel.REGULAR, AccessLevel.MANAGER, AccessLevel.ADMIN)
+    @UseGuards(JwtAuthGuard, AccessLevelGuard)
+    @Get('/:auctionId/participation')
+    async amIParticion(
+        @Request() req: AuthRequest,
+        @Param('auctionId') auctionId: string,
+    ): Promise<ResponseBody> {
+        const userData = req.user;
+        const userId = userData.id;
+
+        const participationData = await this.auctionsService.getParticipationData(
+            userId,
+            auctionId,
+        );
+
+        return createResponseBody(participationData);
     }
 }

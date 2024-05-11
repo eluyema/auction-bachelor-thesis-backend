@@ -12,6 +12,7 @@ import { DefaultAuctionStrategy } from './auction-strategies/default-auction-str
 import { BidsService } from '../bids/bids.service';
 import { MakeBidDto } from './dtos/MakeBidDto';
 import { UpdateBidDto } from '../bids/dtos/UpdateBidDto';
+import { AuctionsMapper } from './auctions.mapper';
 
 @Injectable()
 export class AuctionsService {
@@ -126,48 +127,7 @@ export class AuctionsService {
 
         const currentDate = new Date();
 
-        if (currentDate < auction.auctionStartAt) {
-            console.log(currentDate, auction.auctionStartAt);
-            return { ...auction, Rounds: [] };
-        }
-
-        const allBidsDates = auction.Rounds.map((round) => {
-            return round.Bids.map((bid) => bid.endAt);
-        }).flat();
-
-        const lastBidEndAt = allBidsDates.length
-            ? allBidsDates.reduce((latestDate, currDate) =>
-                  latestDate < currDate ? currDate : latestDate,
-              )
-            : new Date(0);
-
-        if (currentDate > lastBidEndAt && currentDate > auction.firstRoundStartAt) {
-            const preparedRounds = auction.Rounds.map((rounds) => {
-                const preparedBids = rounds.Bids.map((bid) => {
-                    const preparedUser: FoundUserDto = {
-                        id: bid.User.id,
-                        name: bid.User.name,
-                        email: bid.User.id,
-                        accessLevel: bid.User.accessLevel,
-                    };
-                    return { id: bid.id, User: preparedUser, userId: undefined };
-                });
-
-                return { ...rounds, Bids: preparedBids };
-            });
-
-            return { ...auction, Rounds: preparedRounds };
-        }
-
-        const preparedRounds = auction.Rounds.map((rounds) => {
-            const preparedBids = rounds.Bids.map((bid) => {
-                return { ...bid, User: null, userId: undefined };
-            });
-
-            return { ...rounds, Bids: preparedBids };
-        });
-
-        return { ...auction, Rounds: preparedRounds };
+        return AuctionsMapper.mapToPublicView(auction, currentDate);
     }
 
     async createInititalBid(dto: CreateInitialBidDto, userId: string, auctionId: string) {
@@ -207,6 +167,23 @@ export class AuctionsService {
             total: dto.total,
             totalUpdatedAt: new Date(),
         };
-        return this.bidsService.updateCurrentBid(data, auctionId, userId);
+        await this.bidsService.updateCurrentBid(data, auctionId, userId);
+    }
+
+    async getParticipationData(userId: string, auctionId: string) {
+        const initialBids = await this.bidsService.getInitialBids(auctionId);
+
+        const userInitialBid = initialBids.find((bid) => bid.userId === userId);
+
+        if (!userInitialBid) {
+            return {
+                isParticipant: false,
+            };
+        }
+
+        return {
+            isParticipant: true,
+            sequenceNumber: userInitialBid.sequenceNumber,
+        };
     }
 }

@@ -80,4 +80,18 @@ export class UsersService {
 
         return users;
     }
+
+    async findParticipantsOfAuctuion(auctionId: string) {
+        const users = await this.repository.getUsers({
+            where: {
+                Auction: {
+                    some: {
+                        id: auctionId,
+                    },
+                },
+            },
+        });
+
+        return users;
+    }
 }

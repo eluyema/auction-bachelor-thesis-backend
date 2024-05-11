@@ -23,4 +23,8 @@ export class RoundsService {
     async updateRoundsWithBids(rounds: Array<Round & { Bids: Bid[] }>) {
         await this.repository.updateRoundsWithBids({ data: rounds });
     }
+
+    async getDeepRoundsByAuction(auctionId: string) {
+        return this.repository.findAllWithBidsAndUsers({ auctionId });
+    }
 }

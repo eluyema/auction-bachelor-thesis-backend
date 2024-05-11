@@ -52,4 +52,19 @@ export class RoundsRepository {
     async findAll(params: { auctionId: string }) {
         return this.prisma.round.findMany({ where: params });
     }
+
+    async findAllWithBidsAndUsers(params: { auctionId: string }) {
+        return this.prisma.round.findMany({
+            where: {
+                auctionId: params.auctionId,
+            },
+            include: {
+                Bids: {
+                    include: {
+                        User: true,
+                    },
+                },
+            },
+        });
+    }
 }

@@ -6,11 +6,12 @@ import { AuctionsController } from './auctions.controller';
 import { RoundsModule } from '../rounds/rounds.module';
 import { UsersModule } from '../users/users.module';
 import { BidsModule } from '../bids/bids.module';
+import { AuctionGateway } from './auctions.gateway';
 
 @Module({
     imports: [PrismaModule, RoundsModule, UsersModule, BidsModule],
     controllers: [AuctionsController],
-    providers: [AuctionsService, AuctionsRepository],
+    providers: [AuctionsService, AuctionsRepository, AuctionGateway],
     exports: [AuctionsService],
 })
 export class AuctionsModule {}

@@ -53,6 +53,12 @@ export class BidsService {
         }
     }
 
+    async getInitialBids(auctionId: string) {
+        const initialBids = await this.repository.getInitialBids(auctionId);
+
+        return initialBids;
+    }
+
     async removeBid(bidId: string) {
         const removedBid = await this.repository.removeBid({ bidId });
 
