@@ -68,4 +68,16 @@ export class UsersService {
 
         return foundUser.length ? foundUser[0] : null;
     }
+
+    async findUsersByIds(userIds: string[]) {
+        const users = await this.repository.getUsers({
+            where: {
+                id: {
+                    in: userIds,
+                },
+            },
+        });
+
+        return users;
+    }
 }

@@ -19,6 +19,12 @@ enum AccessLevel {
   ADMIN
 }
 
+enum AuctionType {
+  DEFAULT
+  NON_PRICE_CRITERIA
+  ESCO
+}
+
 model User {
   id           String      @id @default(uuid())
   email        String      @unique
@@ -26,4 +32,48 @@ model User {
   passwordHash String
   accessLevel  AccessLevel @default(REGULAR)
   refreshToken String?
+  Auction      Auction[]
+  Round        Round[]
+  Bid          Bid[]
+}
+
+model Auction {
+  id                 String      @id @default(uuid())
+  auctionType        AuctionType @default(DEFAULT)
+  auctionOptions     String?
+  name               String
+  purchaseCode       String
+  customerName       String
+  expectedCost       BigInt
+  decreaseStep       BigInt
+  auctionStartAt     DateTime
+  firstRoundStartAt  DateTime
+  timeForRoundInSecs BigInt
+  Author             User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId           String
+  Rounds             Round[]
+}
+
+model Round {
+  id             String  @id @default(uuid())
+  sequenceNumber Int
+  Auction        Auction @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  auctionId      String
+  Bids           Bid[]
+  User           User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String?
+}
+
+model Bid {
+  id             String    @id @default(uuid())
+  Round          Round     @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId        String
+  sequenceNumber Int
+  total          BigInt?
+  bidOptions     String?
+  User           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  totalUpdatedAt DateTime?
+  startAt        DateTime
+  endAt          DateTime
 }

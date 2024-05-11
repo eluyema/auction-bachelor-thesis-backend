@@ -5,6 +5,7 @@ import configuration from './config/configuration';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './modules/auth/jwt.strategy';
+import { AuctionsModule } from './modules/auctions/auctions.module';
 
 @Module({
     imports: [
@@ -23,6 +24,7 @@ import { JwtStrategy } from './modules/auth/jwt.strategy';
             }),
         }),
         AuthModule,
+        AuctionsModule,
     ],
     providers: [JwtStrategy],
 })
