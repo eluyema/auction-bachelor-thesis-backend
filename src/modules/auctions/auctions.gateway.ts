@@ -79,13 +79,21 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
 
         const onLastRoundFinished = 'on_last_round_finished' + auction.id;
 
-        const firstBid = RoundsMapper.getFirstBid(
-            auction.Rounds.filter((round) => round.sequenceNumber !== 0),
-        );
-        const lastBid = RoundsMapper.getLastBid(auction.Rounds);
-
         const updateJob = () => {
             this.loadAndSendUpdatedRoundsEvent(auctionId);
+        };
+
+        const onFirstRoundStartAt = async () => {
+            this.loadAndSendUpdatedRoundsEvent(auctionId);
+            const lastUpdatedAuction = await this.auctionsService.getNestedAuction(auctionId);
+
+            const lastBid = RoundsMapper.getLastBid(lastUpdatedAuction.Rounds);
+
+            if (!lastBid) {
+                return;
+            }
+
+            this.addTimeoutJob(onLastRoundFinished, lastBid.endAt, auction.id, updateAndDisconnect);
         };
 
         const updateAndDisconnect = () => {
@@ -95,23 +103,31 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
         };
 
         this.addTimeoutJob(onStartEvent, auction.auctionStartAt, auction.id, updateJob);
-        this.addTimeoutJob(onFirstRoundStart, firstBid.startAt, auction.id, updateJob);
-        this.addTimeoutJob(onLastRoundFinished, lastBid.endAt, auction.id, updateAndDisconnect);
+        this.addTimeoutJob(
+            onFirstRoundStart,
+            auction.firstRoundStartAt,
+            auction.id,
+            onFirstRoundStartAt,
+        );
     }
 
     addTimeoutJob(name: string, date: string | Date, auctionId: string, job: () => void) {
-        const startTime = new Date(date);
-        const now = new Date();
-        const delay = startTime.getTime() - now.getTime();
+        try {
+            const startTime = new Date(date);
+            const now = new Date();
+            const delay = startTime.getTime() - now.getTime();
 
-        if (delay < 0) {
-            return;
+            if (delay < 0) {
+                return;
+            }
+
+            const timeout = setTimeout(job, delay);
+
+            this.schedulerRegistry.addTimeout(name, timeout);
+            console.log(`Timeout job ${name} added for auction ${auctionId} at ${startTime}`);
+        } catch (err) {
+            console.error(err);
         }
-
-        const timeout = setTimeout(job, delay);
-
-        this.schedulerRegistry.addTimeout(name, timeout);
-        console.log(`Timeout job ${name} added for auction ${auctionId} at ${startTime}`);
     }
 
     deleteTimeoutJob(name: string) {

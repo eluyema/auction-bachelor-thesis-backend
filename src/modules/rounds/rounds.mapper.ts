@@ -44,7 +44,9 @@ export class RoundsMapper {
 
                     return {
                         ...bid,
-                        total: bid.total ? bid.total : this.getLastBidTotal(rounds, bid.userId),
+                        total: bid.total
+                            ? bid.total
+                            : this.getLastBidTotal(rounds, bid.userId, round.sequenceNumber),
                         User: preparedUser,
                         userId: bid.userId,
                     };
@@ -68,7 +70,9 @@ export class RoundsMapper {
             const preparedBids = round.Bids.map((bid) => {
                 return {
                     ...bid,
-                    total: bid.total ? bid.total : this.getLastBidTotal(rounds, bid.userId),
+                    total: bid.total
+                        ? bid.total
+                        : this.getLastBidTotal(rounds, bid.userId, round.sequenceNumber),
                     User: null,
                     userId: undefined,
                 };
@@ -83,12 +87,14 @@ export class RoundsMapper {
     private static getLastBidTotal(
         rounds: Array<Round & { Bids: Array<Bid & { User?: User }> }>,
         userId: string,
+        currentSequenceNumber: number,
     ) {
         if (!rounds.length) {
             return 0;
         }
 
         const userBids = rounds
+            .filter((round) => round.sequenceNumber <= currentSequenceNumber)
             .map((round) => round.Bids.filter((bid) => bid.userId === userId))
             .flat();
 
@@ -130,7 +136,9 @@ export class RoundsMapper {
                 };
                 return {
                     ...bid,
-                    total: bid.total ? bid.total : this.getLastBidTotal(rounds, bid.userId),
+                    total: bid.total
+                        ? bid.total
+                        : this.getLastBidTotal(rounds, bid.userId, round.sequenceNumber),
                     User: preparedUser,
                 };
             });
