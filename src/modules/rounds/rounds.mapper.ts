@@ -30,8 +30,8 @@ export class RoundsMapper {
                 const lastBid = RoundsMapper.getLastBid([round]);
 
                 const roundTimeData = {
-                    startAt: firstBid ? firstBid.startAt : null,
-                    endAt: lastBid ? lastBid.endAt : null,
+                    startAt: firstBid ? firstBid.startAt : firstRoundStartAt,
+                    endAt: lastBid ? lastBid.endAt : firstRoundStartAt,
                 };
 
                 const preparedBids = round.Bids.map((bid) => {
@@ -62,8 +62,8 @@ export class RoundsMapper {
             const lastBid = RoundsMapper.getLastBid([round]);
 
             const roundTimeData = {
-                startAt: firstBid ? firstBid.startAt : null,
-                endAt: lastBid ? lastBid.endAt : null,
+                startAt: firstBid ? firstBid.startAt : firstRoundStartAt,
+                endAt: lastBid ? lastBid.endAt : firstRoundStartAt,
             };
 
             const preparedBids = round.Bids.map((bid) => {
@@ -109,14 +109,17 @@ export class RoundsMapper {
         return lastBid.total || 0;
     }
 
-    public static toAdminRounds(rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>) {
+    public static toAdminRounds(
+        rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>,
+        firstRoundStartAt: Date,
+    ) {
         const preparedRounds = rounds.map((round) => {
             const firstBid = RoundsMapper.getFirstBid([round]);
             const lastBid = RoundsMapper.getLastBid([round]);
 
             const roundTimeData = {
-                startAt: firstBid ? firstBid.startAt : null,
-                endAt: lastBid ? lastBid.endAt : null,
+                startAt: firstBid ? firstBid.startAt : firstRoundStartAt,
+                endAt: lastBid ? lastBid.endAt : firstRoundStartAt,
             };
 
             const preparedBids = round.Bids.map((bid) => {

@@ -22,7 +22,7 @@ export class AuctionsMapper {
         auction: Auction & { Rounds: Array<Round & { Bids: Array<Bid & { User: User }> }> },
         currentDate: Date,
     ) {
-        const mappedRounds = RoundsMapper.toAdminRounds(auction.Rounds);
+        const mappedRounds = RoundsMapper.toAdminRounds(auction.Rounds, auction.firstRoundStartAt);
 
         const auctionStatus = AuctionsMapper.getAuctionStatus(auction, currentDate);
 
