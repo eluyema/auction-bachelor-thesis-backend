@@ -66,7 +66,7 @@ export class RoundsMapper {
                     email: bid.User.id,
                     accessLevel: bid.User.accessLevel,
                 };
-                return { ...bid, User: preparedUser, userId: undefined };
+                return { ...bid, User: preparedUser };
             });
 
             return { ...round, Bids: preparedBids };
