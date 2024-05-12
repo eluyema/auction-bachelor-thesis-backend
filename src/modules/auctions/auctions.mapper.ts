@@ -48,6 +48,10 @@ export class AuctionsMapper {
             return 'waiting';
         }
 
+        if (!lastBid) {
+            return 'finished';
+        }
+
         if (currentDate < lastBid.endAt) {
             return 'active';
         }
