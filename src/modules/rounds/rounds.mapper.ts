@@ -22,9 +22,9 @@ export class RoundsMapper {
             ? allBidsDates.reduce((latestDate, currDate) =>
                   latestDate < currDate ? currDate : latestDate,
               )
-            : new Date(0);
+            : firstRoundStartAt;
 
-        if (currentDate > lastBidEndAt && currentDate > firstRoundStartAt) {
+        if (currentDate > lastBidEndAt) {
             const preparedRounds = rounds.map((round) => {
                 const firstBid = RoundsMapper.getFirstBid([round]);
                 const lastBid = RoundsMapper.getLastBid([round]);
@@ -44,14 +44,13 @@ export class RoundsMapper {
 
                     return {
                         ...bid,
-                        ...roundTimeData,
                         total: bid.total ? bid.total : this.getLastBidTotal(rounds, bid.userId),
                         User: preparedUser,
                         userId: bid.userId,
                     };
                 });
 
-                return { ...round, Bids: preparedBids };
+                return { ...round, ...roundTimeData, Bids: preparedBids };
             });
 
             return preparedRounds;
