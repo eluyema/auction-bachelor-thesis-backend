@@ -149,7 +149,7 @@ export class RoundsMapper {
         }
 
         const sortedBids = allBids.sort(
-            (a, b) => new Date(a.startAt).getDate() - new Date(b.startAt).getDate(),
+            (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime(),
         );
 
         const firstBid = sortedBids[0];
@@ -164,7 +164,7 @@ export class RoundsMapper {
             return null;
         }
         const sortedBids = allBids.sort(
-            (a, b) => new Date(a.startAt).getDate() - new Date(b.startAt).getDate(),
+            (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime(),
         );
 
         const lastBid = sortedBids[sortedBids.length - 1];
