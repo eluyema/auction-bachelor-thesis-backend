@@ -93,7 +93,6 @@ export class RoundsMapper {
         if (!allBids.length) {
             return null;
         }
-
         const sortedBids = allBids.sort(
             (a, b) => new Date(a.startAt).getDate() - new Date(b.startAt).getDate(),
         );
