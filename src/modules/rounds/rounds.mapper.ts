@@ -38,7 +38,7 @@ export class RoundsMapper {
                     const preparedUser: FoundUserDto = {
                         id: bid.User.id,
                         name: bid.User.name,
-                        email: bid.User.id,
+                        email: bid.User.email,
                         accessLevel: bid.User.accessLevel,
                     };
 
@@ -125,7 +125,7 @@ export class RoundsMapper {
                 const preparedUser: FoundUserDto = {
                     id: bid.User.id,
                     name: bid.User.name,
-                    email: bid.User.id,
+                    email: bid.User.email,
                     accessLevel: bid.User.accessLevel,
                 };
                 return {

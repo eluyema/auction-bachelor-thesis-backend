@@ -12,10 +12,10 @@ export class DefaultAuctionStrategy implements AuctionStrategy {
 
         bids.sort((bidA, bidB) => {
             if (bidA.total !== bidB.total) {
-                return Number(bidB.total) - Number(bidA.total); // the much money will be first
+                return Number(bidA.total) - Number(bidB.total); // the less money will be last
             }
 
-            return bidA.totalUpdatedAt.getTime() - bidB.totalUpdatedAt.getTime(); // the less time will be first
+            return bidB.totalUpdatedAt.getTime() - bidA.totalUpdatedAt.getTime(); // the fisrt time will be first
         });
 
         return bids.map(({ userId }) => ({ userId }));
