@@ -45,7 +45,7 @@ export class RoundsMapper {
                     return {
                         ...bid,
                         ...roundTimeData,
-                        total: bid.total ? bid.total : this.getLastBidTotal(round.Bids),
+                        total: bid.total ? bid.total : this.getLastBidTotal(rounds, bid.userId),
                         User: preparedUser,
                         userId: bid.userId,
                     };
@@ -69,7 +69,7 @@ export class RoundsMapper {
             const preparedBids = round.Bids.map((bid) => {
                 return {
                     ...bid,
-                    total: bid.total ? bid.total : this.getLastBidTotal(round.Bids),
+                    total: bid.total ? bid.total : this.getLastBidTotal(rounds, bid.userId),
                     User: null,
                     userId: undefined,
                 };
@@ -81,15 +81,25 @@ export class RoundsMapper {
         return preparedRounds;
     }
 
-    private static getLastBidTotal(bids: Array<Bid & { User?: User }>) {
-        if (!bids.length) {
+    private static getLastBidTotal(
+        rounds: Array<Round & { Bids: Array<Bid & { User?: User }> }>,
+        userId: string,
+    ) {
+        if (!rounds.length) {
             return 0;
         }
 
-        let lastBid = bids[0];
-        let lastUpdateAt = bids[0].totalUpdatedAt;
+        const userBids = rounds
+            .map((round) => round.Bids.filter((bid) => bid.userId === userId))
+            .flat();
 
-        for (const bid of bids) {
+        let lastBid = userBids[0];
+        let lastUpdateAt = userBids[0].totalUpdatedAt;
+
+        for (const bid of userBids) {
+            if (bid.totalUpdatedAt === null) {
+                continue;
+            }
             if (lastUpdateAt < bid.totalUpdatedAt) {
                 lastUpdateAt = bid.totalUpdatedAt;
                 lastBid = bid;
@@ -118,7 +128,7 @@ export class RoundsMapper {
                 };
                 return {
                     ...bid,
-                    total: bid.total ? bid.total : this.getLastBidTotal(round.Bids),
+                    total: bid.total ? bid.total : this.getLastBidTotal(rounds, bid.userId),
                     User: preparedUser,
                 };
             });
