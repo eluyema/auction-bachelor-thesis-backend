@@ -26,6 +26,14 @@ export class RoundsMapper {
 
         if (currentDate > lastBidEndAt && currentDate > firstRoundStartAt) {
             const preparedRounds = rounds.map((round) => {
+                const firstBid = RoundsMapper.getFirstBid([round]);
+                const lastBid = RoundsMapper.getLastBid([round]);
+
+                const roundTimeData = {
+                    startAt: firstBid ? firstBid.startAt : null,
+                    endAt: lastBid ? lastBid.endAt : null,
+                };
+
                 const preparedBids = round.Bids.map((bid) => {
                     const preparedUser: FoundUserDto = {
                         id: bid.User.id,
@@ -35,6 +43,7 @@ export class RoundsMapper {
                     };
                     return {
                         ...bid,
+                        ...roundTimeData,
                         User: preparedUser,
                         userId: bid.userId,
                     };
@@ -46,12 +55,20 @@ export class RoundsMapper {
             return preparedRounds;
         }
 
-        const preparedRounds = rounds.map((rounds) => {
-            const preparedBids = rounds.Bids.map((bid) => {
+        const preparedRounds = rounds.map((round) => {
+            const firstBid = RoundsMapper.getFirstBid([round]);
+            const lastBid = RoundsMapper.getLastBid([round]);
+
+            const roundTimeData = {
+                startAt: firstBid ? firstBid.startAt : null,
+                endAt: lastBid ? lastBid.endAt : null,
+            };
+
+            const preparedBids = round.Bids.map((bid) => {
                 return { ...bid, User: null, userId: undefined };
             });
 
-            return { ...rounds, Bids: preparedBids };
+            return { ...round, ...roundTimeData, Bids: preparedBids };
         });
 
         return preparedRounds;
@@ -59,6 +76,14 @@ export class RoundsMapper {
 
     public static toAdminRounds(rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>) {
         const preparedRounds = rounds.map((round) => {
+            const firstBid = RoundsMapper.getFirstBid([round]);
+            const lastBid = RoundsMapper.getLastBid([round]);
+
+            const roundTimeData = {
+                startAt: firstBid ? firstBid.startAt : null,
+                endAt: lastBid ? lastBid.endAt : null,
+            };
+
             const preparedBids = round.Bids.map((bid) => {
                 const preparedUser: FoundUserDto = {
                     id: bid.User.id,
@@ -69,7 +94,7 @@ export class RoundsMapper {
                 return { ...bid, User: preparedUser };
             });
 
-            return { ...round, Bids: preparedBids };
+            return { ...round, ...roundTimeData, Bids: preparedBids };
         });
 
         return preparedRounds;
