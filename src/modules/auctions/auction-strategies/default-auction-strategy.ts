@@ -28,7 +28,7 @@ export class DefaultAuctionStrategy implements AuctionStrategy {
         return roundsWithBids.map((round) => {
             const updatedBids = round.Bids.filter((bid) => bid.userId !== userId);
 
-            return { ...round, ...updatedBids };
+            return { ...round, Bids: updatedBids };
         });
     }
 

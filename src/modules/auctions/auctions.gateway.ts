@@ -72,7 +72,6 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
             console.log('Already setuped');
             return;
         }
-        console.log('start setup!');
 
         const auction = await this.auctionsService.getNestedAuction(auctionId);
 
@@ -106,9 +105,6 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
         const delay = startTime.getTime() - now.getTime();
 
         if (delay < 0) {
-            console.log('Auction start time must be in the future', name);
-            console.log(startTime.toJSON());
-            console.log(now.toJSON());
             return;
         }
 

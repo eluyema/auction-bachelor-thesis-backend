@@ -162,7 +162,6 @@ export class AuctionsController {
         @Body() dto: MakeBidDto,
     ): Promise<ResponseBody> {
         const userData = req.user;
-        console.log(userData);
         const userId = userData.id;
         await this.auctionsService.makeUserBit(dto, userId, auctionId);
         //maybe it's better to remove await :/
