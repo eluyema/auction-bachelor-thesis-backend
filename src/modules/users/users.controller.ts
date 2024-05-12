@@ -43,7 +43,7 @@ export class UsersController {
         return createResponseBody(preparedUser);
     }
 
-    @AccessLevels(AccessLevel.ADMIN)
+    @AccessLevels(AccessLevel.MANAGER, AccessLevel.ADMIN)
     @UseGuards(JwtAuthGuard, AccessLevelGuard)
     @Put('/email/:email')
     async updateUser(@Body() dto: UpdateUserDto, @Param('email') email): Promise<ResponseBody> {

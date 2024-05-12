@@ -33,7 +33,11 @@ export class RoundsMapper {
                         email: bid.User.id,
                         accessLevel: bid.User.accessLevel,
                     };
-                    return { id: bid.id, User: preparedUser, userId: undefined };
+                    return {
+                        ...bid,
+                        User: preparedUser,
+                        userId: bid.userId,
+                    };
                 });
 
                 return { ...round, Bids: preparedBids };
@@ -62,7 +66,7 @@ export class RoundsMapper {
                     email: bid.User.id,
                     accessLevel: bid.User.accessLevel,
                 };
-                return { id: bid.id, User: preparedUser, userId: undefined };
+                return { ...bid, User: preparedUser, userId: undefined };
             });
 
             return { ...round, Bids: preparedBids };
