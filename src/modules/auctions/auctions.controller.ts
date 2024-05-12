@@ -92,9 +92,7 @@ export class AuctionsController {
     @UseGuards(JwtAuthGuard, AccessLevelGuard)
     @Get('admin/:auctionId')
     async getFullAccessAuction(@Param('auctionId') auctionId: string) {
-        const auction = await this.auctionsService.getFullAccessAuctionById(auctionId, {
-            withUsers: true,
-        });
+        const auction = await this.auctionsService.getFullAccessAuctionById(auctionId);
 
         if (auction === null) {
             throw new NotFoundException(`Auction with id ${auctionId} doesn't exist`);

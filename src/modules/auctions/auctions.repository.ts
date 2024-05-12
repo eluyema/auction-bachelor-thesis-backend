@@ -38,9 +38,14 @@ export class AuctionsRepository {
         return this.prisma.auction.update({ data: data, where: { id: auctionId } });
     }
 
-    async findAll(params: { id?: string; authorId?: string }, include?: Prisma.AuctionInclude) {
+    async findAll(params: {
+        select?: Prisma.AuctionSelect;
+        where?: Prisma.AuctionWhereInput;
+        include?: Prisma.AuctionInclude;
+    }) {
+        const { where, include } = params;
         return this.prisma.auction.findMany({
-            where: params,
+            where,
             include,
         });
     }
@@ -52,7 +57,7 @@ export class AuctionsRepository {
         });
     }
 
-    async findAuctionsWithRoundsAndBids(params: { auctionId: string }) {
+    async findAuctionWithRoundsAndBids(params: { auctionId: string }) {
         const { auctionId } = params;
 
         return this.prisma.auction.findFirst({
@@ -65,6 +70,22 @@ export class AuctionsRepository {
                 },
             },
         });
+    }
+
+    async findManyAuctionsWithRoundsAndBids(params: { where?: Prisma.AuctionWhereInput } = {}) {
+        const { where } = params;
+        const auctions = await this.prisma.auction.findMany({
+            where,
+            include: {
+                Rounds: {
+                    include: {
+                        Bids: true,
+                    },
+                },
+            },
+        });
+
+        return auctions;
     }
 
     async findAuctionWithRoundsBidsUsers(params: { auctionId: string }) {

@@ -6,8 +6,6 @@ import { UpdateAuctionDto } from './dtos/UpdateAuctionDto';
 import { CreateRoundDto } from '../rounds/dtos/CreateRoundDto';
 import { CreateInitialBidDto } from './dtos/CreateInitialBidDto';
 import { UsersService } from '../users/users.service';
-import { Auction, Bid, Round } from '@prisma/client';
-import { FoundUserDto } from '../users/dtos/foundUserDto';
 import { DefaultAuctionStrategy } from './auction-strategies/default-auction-strategy';
 import { BidsService } from '../bids/bids.service';
 import { MakeBidDto } from './dtos/MakeBidDto';
@@ -45,7 +43,7 @@ export class AuctionsService {
     }
 
     async updateAuction(auctionDto: UpdateAuctionDto, auctionId: string) {
-        const foundAuctions = await this.auctionsRepository.findAll({ id: auctionId });
+        const foundAuctions = await this.auctionsRepository.findAll({ where: { id: auctionId } });
 
         if (foundAuctions.length === 0) {
             return null;
@@ -70,15 +68,29 @@ export class AuctionsService {
     }
 
     async getAuctionsByAuthorId(authorId: string) {
-        return await this.auctionsRepository.findAll({ authorId: authorId });
+        const auctions = await this.auctionsRepository.findManyAuctionsWithRoundsAndBids({
+            where: { authorId },
+        });
+
+        const currentDate = new Date();
+
+        return auctions.map((auction) => {
+            return AuctionsMapper.mapToPublicViewWithoutRounds(auction, currentDate);
+        });
     }
 
     async getAllAuctions() {
-        return await this.auctionsRepository.findAll({});
+        const auctions = await this.auctionsRepository.findManyAuctionsWithRoundsAndBids();
+
+        const currentDate = new Date();
+
+        return auctions.map((auction) => {
+            return AuctionsMapper.mapToPublicViewWithoutRounds(auction, currentDate);
+        });
     }
 
     async getAuctionById(auctionId: string) {
-        const auctions = await this.auctionsRepository.findAll({ id: auctionId });
+        const auctions = await this.auctionsRepository.findAll({ where: { id: auctionId } });
 
         if (auctions.length === 0) {
             return null;
@@ -87,33 +99,18 @@ export class AuctionsService {
         return auctions[0];
     }
 
-    async getFullAccessAuctionById(
-        auctionId: string,
-        params: { withUsers: boolean } = { withUsers: false },
-    ): Promise<Auction & { Rounds: Array<Round & { Bids: Bid[] }>; Users?: FoundUserDto[] }> {
+    async getFullAccessAuctionById(auctionId: string) {
         const auction = await this.auctionsRepository.findAuctionWithRoundsBidsUsers({
             auctionId,
         });
-
-        const additionalData: { Users?: FoundUserDto[] } = {};
 
         if (!auction) {
             return null;
         }
 
-        if (params.withUsers) {
-            const userIds = auction.Rounds[0].Bids.map(({ userId }) => userId);
-            const users = await this.usersService.findUsersByIds(userIds);
+        const currentDate = new Date();
 
-            additionalData.Users = users.map((user) => ({
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                accessLevel: user.accessLevel,
-            }));
-        }
-
-        return { ...auction, ...additionalData };
+        return AuctionsMapper.mapToAdminView(auction, currentDate);
     }
 
     async getPublicAccessAuctionById(auctionId: string) {
@@ -143,7 +140,7 @@ export class AuctionsService {
     }
 
     async createInititalBid(dto: CreateInitialBidDto, userId: string, auctionId: string) {
-        const auction = await this.auctionsRepository.findAuctionsWithRoundsAndBids({
+        const auction = await this.auctionsRepository.findAuctionWithRoundsAndBids({
             auctionId,
         });
 
@@ -159,7 +156,7 @@ export class AuctionsService {
     }
 
     async removeInititalBid(userId: string, auctionId: string) {
-        const auction = await this.auctionsRepository.findAuctionsWithRoundsAndBids({
+        const auction = await this.auctionsRepository.findAuctionWithRoundsAndBids({
             auctionId,
         });
 

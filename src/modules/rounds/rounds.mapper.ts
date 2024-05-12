@@ -53,6 +53,24 @@ export class RoundsMapper {
         return preparedRounds;
     }
 
+    public static toAdminRounds(rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>) {
+        const preparedRounds = rounds.map((round) => {
+            const preparedBids = round.Bids.map((bid) => {
+                const preparedUser: FoundUserDto = {
+                    id: bid.User.id,
+                    name: bid.User.name,
+                    email: bid.User.id,
+                    accessLevel: bid.User.accessLevel,
+                };
+                return { id: bid.id, User: preparedUser, userId: undefined };
+            });
+
+            return { ...round, Bids: preparedBids };
+        });
+
+        return preparedRounds;
+    }
+
     static getFirstBid(rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>) {
         const allBids = rounds.map((round) => round.Bids).flat();
 
@@ -69,7 +87,7 @@ export class RoundsMapper {
         return firstBid;
     }
 
-    static getLastBid(rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>) {
+    static getLastBid(rounds: Array<Round & { Bids: Array<Bid> }>) {
         const allBids = rounds.map((round) => round.Bids).flat();
 
         if (!allBids.length) {
