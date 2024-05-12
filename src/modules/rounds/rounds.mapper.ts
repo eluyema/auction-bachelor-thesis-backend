@@ -41,9 +41,11 @@ export class RoundsMapper {
                         email: bid.User.id,
                         accessLevel: bid.User.accessLevel,
                     };
+
                     return {
                         ...bid,
                         ...roundTimeData,
+                        total: bid.total ? bid.total : this.getLastBidTotal(round.Bids),
                         User: preparedUser,
                         userId: bid.userId,
                     };
@@ -65,13 +67,36 @@ export class RoundsMapper {
             };
 
             const preparedBids = round.Bids.map((bid) => {
-                return { ...bid, User: null, userId: undefined };
+                return {
+                    ...bid,
+                    total: bid.total ? bid.total : this.getLastBidTotal(round.Bids),
+                    User: null,
+                    userId: undefined,
+                };
             });
 
             return { ...round, ...roundTimeData, Bids: preparedBids };
         });
 
         return preparedRounds;
+    }
+
+    private static getLastBidTotal(bids: Array<Bid & { User?: User }>) {
+        if (!bids.length) {
+            return 0;
+        }
+
+        let lastBid = bids[0];
+        let lastUpdateAt = bids[0].totalUpdatedAt;
+
+        for (const bid of bids) {
+            if (lastUpdateAt < bid.totalUpdatedAt) {
+                lastUpdateAt = bid.totalUpdatedAt;
+                lastBid = bid;
+            }
+        }
+
+        return lastBid.total || 0;
     }
 
     public static toAdminRounds(rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>) {
@@ -91,7 +116,11 @@ export class RoundsMapper {
                     email: bid.User.id,
                     accessLevel: bid.User.accessLevel,
                 };
-                return { ...bid, User: preparedUser };
+                return {
+                    ...bid,
+                    total: bid.total ? bid.total : this.getLastBidTotal(round.Bids),
+                    User: preparedUser,
+                };
             });
 
             return { ...round, ...roundTimeData, Bids: preparedBids };
