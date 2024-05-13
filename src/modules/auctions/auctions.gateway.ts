@@ -87,6 +87,10 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
             this.loadAndSendUpdatedRoundsEvent(auctionId);
             const lastUpdatedAuction = await this.auctionsService.getNestedAuction(auctionId);
 
+            if (!lastUpdatedAuction) {
+                return;
+            }
+
             const lastBid = RoundsMapper.getLastBid(lastUpdatedAuction.Rounds);
 
             if (!lastBid) {
