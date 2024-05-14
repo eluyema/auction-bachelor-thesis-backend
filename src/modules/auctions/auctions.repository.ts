@@ -78,7 +78,7 @@ export class AuctionsRepository {
                 Rounds: {
                     every: {
                         Bids: {
-                            every: {
+                            some: {
                                 userId,
                             },
                         },
