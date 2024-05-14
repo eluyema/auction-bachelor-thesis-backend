@@ -186,4 +186,21 @@ export class AuctionsController {
 
         return createResponseBody(participationData);
     }
+
+    @Get('/participants/:userId')
+    async getParticipantAuctions(@Param('userId') userId: string) {
+        const auctions = await this.auctionsService.getParticipantAuctions(userId);
+        return createResponseBody(auctions);
+    }
+
+    @AccessLevels(AccessLevel.REGULAR, AccessLevel.MANAGER, AccessLevel.ADMIN)
+    @UseGuards(JwtAuthGuard, AccessLevelGuard)
+    @Get('/participants/my')
+    async getMyParticipantAuctions(@Request() req: AuthRequest) {
+        const userData = req.user;
+        const userId = userData.id;
+        const auctions = await this.auctionsService.getParticipantAuctions(userId);
+
+        return createResponseBody(auctions);
+    }
 }

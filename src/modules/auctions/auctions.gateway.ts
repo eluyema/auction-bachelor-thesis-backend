@@ -86,7 +86,7 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
         const onFirstRoundStartAt = async () => {
             this.loadAndSendUpdatedRoundsEvent(auctionId);
             const lastUpdatedAuction = await this.auctionsService.getNestedAuction(auctionId);
-
+            console.log('onFirstRoundStartAt', auctionId, lastUpdatedAuction);
             if (!lastUpdatedAuction) {
                 return;
             }

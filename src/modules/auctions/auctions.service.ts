@@ -79,6 +79,16 @@ export class AuctionsService {
         });
     }
 
+    async getParticipantAuctions(userId: string) {
+        const auctions = await this.auctionsRepository.findParticipantAuctions(userId);
+
+        const currentDate = new Date();
+
+        return auctions.map((auction) => {
+            return AuctionsMapper.mapToPublicViewWithoutRounds(auction, currentDate);
+        });
+    }
+
     async getAllAuctions() {
         const auctions = await this.auctionsRepository.findManyAuctionsWithRoundsAndBids();
 

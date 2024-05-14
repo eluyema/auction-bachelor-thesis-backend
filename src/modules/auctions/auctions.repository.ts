@@ -72,6 +72,31 @@ export class AuctionsRepository {
         });
     }
 
+    async findParticipantAuctions(userId: string) {
+        const auctions = await this.prisma.auction.findMany({
+            where: {
+                Rounds: {
+                    every: {
+                        Bids: {
+                            every: {
+                                userId,
+                            },
+                        },
+                    },
+                },
+            },
+            include: {
+                Rounds: {
+                    include: {
+                        Bids: true,
+                    },
+                },
+            },
+        });
+
+        return auctions;
+    }
+
     async findManyAuctionsWithRoundsAndBids(params: { where?: Prisma.AuctionWhereInput } = {}) {
         const { where } = params;
         const auctions = await this.prisma.auction.findMany({
