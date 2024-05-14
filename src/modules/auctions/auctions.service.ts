@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { AuctionsRepository } from './auctions.repository';
 import { RoundsService } from '../rounds/rounds.service';
 import { CreateAuctionDto } from './dtos/CreateAuctionDto';
@@ -80,12 +80,21 @@ export class AuctionsService {
     }
 
     async getParticipantAuctions(userId: string) {
+        const users = await this.usersService.findUsersByIds([userId]);
+
+        if (!users[0]) {
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        }
+
         const auctions = await this.auctionsRepository.findParticipantAuctions(userId);
 
         const currentDate = new Date();
 
         return auctions.map((auction) => {
-            return AuctionsMapper.mapToPublicViewWithoutRounds(auction, currentDate);
+            return {
+                userName: users[0].name,
+                data: AuctionsMapper.mapToPublicViewWithoutRounds(auction, currentDate),
+            };
         });
     }
 
