@@ -192,15 +192,4 @@ export class AuctionsController {
         const auctions = await this.auctionsService.getParticipantAuctions(userId);
         return createResponseBody(auctions);
     }
-
-    @AccessLevels(AccessLevel.REGULAR, AccessLevel.MANAGER, AccessLevel.ADMIN)
-    @UseGuards(JwtAuthGuard, AccessLevelGuard)
-    @Get('/participants/self')
-    async getMyParticipantAuctions(@Request() req: AuthRequest) {
-        const userData = req.user;
-        const userId = userData.id;
-        const auctions = await this.auctionsService.getParticipantAuctions(userId);
-
-        return createResponseBody(auctions);
-    }
 }

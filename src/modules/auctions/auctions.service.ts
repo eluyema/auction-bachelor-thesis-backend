@@ -81,7 +81,7 @@ export class AuctionsService {
 
     async getParticipantAuctions(userId: string) {
         const users = await this.usersService.findUsersByIds([userId]);
-
+        console.log(users, userId);
         if (!users[0]) {
             throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         }
@@ -90,12 +90,12 @@ export class AuctionsService {
 
         const currentDate = new Date();
 
-        return auctions.map((auction) => {
-            return {
-                userName: users[0].name,
-                data: AuctionsMapper.mapToPublicViewWithoutRounds(auction, currentDate),
-            };
-        });
+        return {
+            userName: users[0].name,
+            auctions: auctions.map((auction) => {
+                return AuctionsMapper.mapToPublicViewWithoutRounds(auction, currentDate);
+            }),
+        };
     }
 
     async getAllAuctions() {
