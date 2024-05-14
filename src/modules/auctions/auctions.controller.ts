@@ -195,7 +195,7 @@ export class AuctionsController {
 
     @AccessLevels(AccessLevel.REGULAR, AccessLevel.MANAGER, AccessLevel.ADMIN)
     @UseGuards(JwtAuthGuard, AccessLevelGuard)
-    @Get('/participants/my')
+    @Get('/participants/self')
     async getMyParticipantAuctions(@Request() req: AuthRequest) {
         const userData = req.user;
         const userId = userData.id;
