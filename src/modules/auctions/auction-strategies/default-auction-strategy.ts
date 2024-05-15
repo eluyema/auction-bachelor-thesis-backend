@@ -60,7 +60,7 @@ export class DefaultAuctionStrategy implements AuctionStrategy {
             return { ...round, Bids: [...bids, newBid] };
         });
     }
-
+    //TODO: refactor
     private getRoundsWithSortedBids(
         roundsWithBids: Array<Round & { Bids: Bid[] }>,
         usersOrder: { userId: string }[],
