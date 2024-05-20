@@ -8,9 +8,17 @@ import { UsersModule } from '../users/users.module';
 import { BidsModule } from '../bids/bids.module';
 import { AuctionGateway } from './auctions.gateway';
 import { ScheduleModule } from '@nestjs/schedule';
+import { PseudonymsModule } from '../pseudonyms/pseudonyms.module';
 
 @Module({
-    imports: [PrismaModule, RoundsModule, UsersModule, BidsModule, ScheduleModule.forRoot()],
+    imports: [
+        PrismaModule,
+        RoundsModule,
+        UsersModule,
+        BidsModule,
+        PseudonymsModule,
+        ScheduleModule.forRoot(),
+    ],
     controllers: [AuctionsController],
     providers: [AuctionsService, AuctionsRepository, AuctionGateway],
     exports: [AuctionsService],

@@ -1,12 +1,13 @@
-import { Bid, Round, User } from '@prisma/client';
+import { AuctionType, Bid, Pseudonym, Round, User } from '@prisma/client';
 import { FoundUserDto } from '../users/dtos/foundUserDto';
 
 export class RoundsMapper {
     public static toPublicRounds(
-        rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>,
+        rounds: Array<Round & { Bids: Array<Bid & { User: User & { Pseudonym: Pseudonym[] } }> }>,
         auctionStartAt: Date,
         firstRoundStartAt: Date,
         currentDate: Date,
+        auctionType: AuctionType,
     ) {
         if (currentDate < auctionStartAt) {
             return [];
@@ -35,6 +36,26 @@ export class RoundsMapper {
                 };
 
                 const preparedBids = round.Bids.map((bid) => {
+                    const Pseudonym = bid.User.Pseudonym[0];
+
+                    const lastBidWithTotal = this.getLastBidWithFilledTotal(
+                        rounds,
+                        bid.userId,
+                        round.sequenceNumber,
+                    );
+
+                    const total = bid.total ? bid.total : lastBidWithTotal.total || 0;
+
+                    const adjustedPrice = bid.adjustedPrice
+                        ? bid.adjustedPrice
+                        : lastBidWithTotal.adjustedPrice || 0;
+
+                    const years = bid.years ? bid.years : lastBidWithTotal.years || 0;
+
+                    const days = bid.days ? bid.days : lastBidWithTotal.days || 0;
+
+                    const percent = bid.percent ? bid.percent : lastBidWithTotal.percent || 0;
+
                     const preparedUser: FoundUserDto = {
                         id: bid.User.id,
                         name: bid.User.name,
@@ -44,9 +65,12 @@ export class RoundsMapper {
 
                     return {
                         ...bid,
-                        total: bid.total
-                            ? bid.total
-                            : this.getLastBidTotal(rounds, bid.userId, round.sequenceNumber),
+                        total,
+                        adjustedPrice,
+                        years,
+                        days,
+                        percent,
+                        pseudonym: Pseudonym ? Pseudonym.value : null,
                         User: preparedUser,
                         userId: bid.userId,
                     };
@@ -68,13 +92,26 @@ export class RoundsMapper {
             };
 
             const preparedBids = round.Bids.map((bid) => {
+                const Pseudonym = bid.User.Pseudonym[0];
+
+                const lastBidWithTotal = this.getLastBidWithFilledTotal(
+                    rounds,
+                    bid.userId,
+                    round.sequenceNumber,
+                );
+
+                const total = bid.total ? bid.total : lastBidWithTotal.total || 0;
+
                 return {
                     ...bid,
-                    total: bid.total
-                        ? bid.total
-                        : this.getLastBidTotal(rounds, bid.userId, round.sequenceNumber),
+                    total: auctionType === AuctionType.NON_PRICE_CRITERIA ? null : total,
+                    pseudonym: Pseudonym ? Pseudonym.value : null,
                     User: null,
                     userId: undefined,
+                    years: null,
+                    days: null,
+                    percent: null,
+                    coefficient: null,
                 };
             });
 
@@ -84,13 +121,13 @@ export class RoundsMapper {
         return preparedRounds;
     }
 
-    private static getLastBidTotal(
+    private static getLastBidWithFilledTotal(
         rounds: Array<Round & { Bids: Array<Bid & { User?: User }> }>,
         userId: string,
         currentSequenceNumber: number,
     ) {
         if (!rounds.length) {
-            return 0;
+            return null;
         }
 
         const userBids = rounds
@@ -111,11 +148,11 @@ export class RoundsMapper {
             }
         }
 
-        return lastBid.total || 0;
+        return lastBid || null;
     }
 
     public static toAdminRounds(
-        rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>,
+        rounds: Array<Round & { Bids: Array<Bid & { User: User & { Pseudonym: Pseudonym[] } }> }>,
         firstRoundStartAt: Date,
     ) {
         const preparedRounds = rounds.map((round) => {
@@ -128,17 +165,27 @@ export class RoundsMapper {
             };
 
             const preparedBids = round.Bids.map((bid) => {
+                const Pseudonym = bid.User.Pseudonym[0];
+
                 const preparedUser: FoundUserDto = {
                     id: bid.User.id,
                     name: bid.User.name,
                     email: bid.User.email,
                     accessLevel: bid.User.accessLevel,
                 };
+
+                const lastBidWithTotal = this.getLastBidWithFilledTotal(
+                    rounds,
+                    bid.userId,
+                    round.sequenceNumber,
+                );
+
+                const total = bid.total ? bid.total : lastBidWithTotal.total || 0;
+
                 return {
                     ...bid,
-                    total: bid.total
-                        ? bid.total
-                        : this.getLastBidTotal(rounds, bid.userId, round.sequenceNumber),
+                    total,
+                    pseudonym: Pseudonym ? Pseudonym.value : null,
                     User: preparedUser,
                 };
             });

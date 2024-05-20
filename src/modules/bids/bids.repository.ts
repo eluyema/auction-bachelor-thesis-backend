@@ -45,7 +45,6 @@ export class BidsRepository {
                     total: data.total,
                     startAt: data.startAt,
                     endAt: data.endAt,
-                    bidOptions: data.bidOptions,
                     sequenceNumber: data.sequenceNumber,
                     roundId: data.roundId,
                     userId: data.userId,
@@ -98,6 +97,15 @@ export class BidsRepository {
                 Round: {
                     sequenceNumber: 0,
                     auctionId,
+                },
+            },
+            include: {
+                User: {
+                    include: {
+                        Pseudonym: {
+                            where: { auctionId },
+                        },
+                    },
                 },
             },
         });

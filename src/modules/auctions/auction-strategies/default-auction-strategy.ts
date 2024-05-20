@@ -50,11 +50,15 @@ export class DefaultAuctionStrategy implements AuctionStrategy {
                 sequenceNumber: 0,
                 startAt: dateNow,
                 endAt: dateNow,
-                bidOptions: null,
                 totalUpdatedAt,
                 total,
                 userId: userId,
                 roundId: round.id,
+                years: null,
+                days: null,
+                percent: null,
+                coefficient: null,
+                adjustedPrice: null,
             };
 
             return { ...round, Bids: [...bids, newBid] };
@@ -106,6 +110,10 @@ export class DefaultAuctionStrategy implements AuctionStrategy {
         }
         return updatedRounds;
     }
+
+    // async makeBid(total) {
+
+    // }
 
     async createInititalBid(dto: CreateInitialBidDto, userId: string) {
         const rounds = this.auction.Rounds;

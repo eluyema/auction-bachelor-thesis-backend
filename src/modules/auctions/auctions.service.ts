@@ -11,6 +11,7 @@ import { BidsService } from '../bids/bids.service';
 import { MakeBidDto } from './dtos/MakeBidDto';
 import { UpdateBidDto } from '../bids/dtos/UpdateBidDto';
 import { AuctionsMapper } from './auctions.mapper';
+import { PseudonymsService } from '../pseudonyms/pseudonyms.service';
 
 @Injectable()
 export class AuctionsService {
@@ -19,6 +20,7 @@ export class AuctionsService {
         private roundsService: RoundsService,
         private bidsService: BidsService,
         private usersService: UsersService,
+        private pseudonymsService: PseudonymsService,
     ) {}
 
     async createAuction(auctionDto: CreateAuctionDto, authorId: string) {
@@ -81,7 +83,7 @@ export class AuctionsService {
 
     async getParticipantAuctions(userId: string) {
         const users = await this.usersService.findUsersByIds([userId]);
-        console.log(users, userId);
+
         if (!users[0]) {
             throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         }
@@ -141,6 +143,8 @@ export class AuctionsService {
             return null;
         }
 
+        // auction.Rounds[0].Bids[0].User.Pseudonym[0];
+
         const currentDate = new Date();
 
         return AuctionsMapper.mapToPublicView(auction, currentDate);
@@ -171,7 +175,14 @@ export class AuctionsService {
 
         const roundsWithBidsForUpdate = await strategy.createInititalBid(dto, userId);
 
-        return this.roundsService.updateRoundsWithBids(roundsWithBidsForUpdate);
+        const userIdsOrder = roundsWithBidsForUpdate
+            .find((round) => round.sequenceNumber === 0)
+            .Bids.map(({ userId }) => userId);
+
+        return Promise.all([
+            this.roundsService.updateRoundsWithBids(roundsWithBidsForUpdate),
+            this.pseudonymsService.makeNewOrderOfAuctionPseodonyms(auctionId, userIdsOrder),
+        ]);
     }
 
     async removeInititalBid(userId: string, auctionId: string) {
@@ -187,7 +198,14 @@ export class AuctionsService {
 
         const roundsWithBidsForUpdate = await strategy.removeUserFromRounds(userId);
 
-        return this.roundsService.updateRoundsWithBids(roundsWithBidsForUpdate);
+        const userIdsOrder = roundsWithBidsForUpdate
+            .find((round) => round.sequenceNumber === 0)
+            .Bids.map(({ userId }) => userId);
+
+        return Promise.all([
+            this.roundsService.updateRoundsWithBids(roundsWithBidsForUpdate),
+            this.pseudonymsService.makeNewOrderOfAuctionPseodonyms(auctionId, userIdsOrder),
+        ]);
     }
 
     async makeUserBit(dto: MakeBidDto, userId: string, auctionId: string) {
@@ -209,9 +227,13 @@ export class AuctionsService {
             };
         }
 
+        const pseudonym = userInitialBid.User.Pseudonym[0]
+            ? userInitialBid.User.Pseudonym[0].value
+            : null;
+
         return {
             isParticipant: true,
-            sequenceNumber: userInitialBid.sequenceNumber,
+            pseudonym,
         };
     }
 }

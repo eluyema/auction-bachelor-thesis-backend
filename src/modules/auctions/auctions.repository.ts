@@ -123,7 +123,13 @@ export class AuctionsRepository {
                     include: {
                         Bids: {
                             include: {
-                                User: true,
+                                User: {
+                                    include: {
+                                        Pseudonym: {
+                                            where: { auctionId },
+                                        },
+                                    },
+                                },
                             },
                         },
                     },

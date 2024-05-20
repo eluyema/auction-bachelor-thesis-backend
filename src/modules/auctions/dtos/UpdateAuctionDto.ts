@@ -2,7 +2,6 @@ import { AuctionType } from '@prisma/client';
 import {
     IsDateString,
     IsIn,
-    IsJSON,
     IsNumber,
     IsOptional,
     IsString,
@@ -21,10 +20,6 @@ export class UpdateAuctionDto {
     @IsString()
     @IsIn([AuctionType.DEFAULT, AuctionType.ESCO, AuctionType.NON_PRICE_CRITERIA])
     auctionType?: AuctionType;
-
-    @IsOptional()
-    @IsJSON()
-    auctionOptions?: string;
 
     @IsOptional()
     @IsString()

@@ -1,6 +1,19 @@
-import { IsNumber } from 'class-validator';
+import { IsNumber, IsOptional } from 'class-validator';
 
 export class MakeBidDto {
+    @IsOptional()
     @IsNumber()
-    total: number;
+    total?: number;
+
+    @IsOptional()
+    @IsNumber()
+    years?: number;
+
+    @IsOptional()
+    @IsNumber()
+    days?: number;
+
+    @IsOptional()
+    @IsNumber()
+    percent?: number;
 }

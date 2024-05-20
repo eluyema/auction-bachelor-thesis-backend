@@ -66,17 +66,6 @@ export class AuctionsController {
         return createResponseBody(auctions);
     }
 
-    @Get('info-only/:auctionId')
-    async getAuctionById(@Param('auctionId') auctionId: string): Promise<ResponseBody> {
-        const auction = await this.auctionsService.getPublicAccessAuctionById(auctionId);
-
-        if (auction === null) {
-            throw new NotFoundException(`Auction with id ${auctionId} doesn't exist`);
-        }
-
-        return createResponseBody(auction);
-    }
-
     @Get('public/:auctionId')
     async getPublicAccessAuctionById(@Param('auctionId') auctionId: string): Promise<ResponseBody> {
         const auction = await this.auctionsService.getPublicAccessAuctionById(auctionId);

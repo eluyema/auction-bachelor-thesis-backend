@@ -33,14 +33,13 @@ model User {
   accessLevel  AccessLevel @default(REGULAR)
   refreshToken String?
   Auction      Auction[]
-  Round        Round[]
   Bid          Bid[]
+  Pseudonym    Pseudonym[]
 }
 
 model Auction {
   id                 String      @id @default(uuid())
   auctionType        AuctionType @default(DEFAULT)
-  auctionOptions     String?
   name               String
   purchaseCode       String
   customerName       String
@@ -52,6 +51,7 @@ model Auction {
   Author             User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId           String
   Rounds             Round[]
+  Pseudonym          Pseudonym[]
 }
 
 model Round {
@@ -60,8 +60,6 @@ model Round {
   Auction        Auction @relation(fields: [auctionId], references: [id], onDelete: Cascade)
   auctionId      String
   Bids           Bid[]
-  User           User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId         String?
 }
 
 model Bid {
@@ -70,10 +68,24 @@ model Bid {
   roundId        String
   sequenceNumber Int
   total          BigInt?
-  bidOptions     String?
+  adjustedPrice  BigInt?
+  coefficient    Float?
+  years          Int?
+  days           Int?
+  percent        Float?
   User           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId         String
   totalUpdatedAt DateTime?
   startAt        DateTime
   endAt          DateTime
+}
+
+model Pseudonym {
+  userId    String
+  auctionId String
+  value     String
+  User      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Auction   Auction @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, auctionId])
 }
