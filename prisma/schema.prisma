@@ -57,14 +57,14 @@ model Auction {
 model Round {
   id             String  @id @default(uuid())
   sequenceNumber Int
-  Auction        Auction @relation(fields: [auctionId], references: [id])
+  Auction        Auction @relation(fields: [auctionId], references: [id], onDelete: Cascade)
   auctionId      String
   Bids           Bid[]
 }
 
 model Bid {
   id             String    @id @default(uuid())
-  Round          Round     @relation(fields: [roundId], references: [id])
+  Round          Round     @relation(fields: [roundId], references: [id], onDelete: Cascade)
   roundId        String
   sequenceNumber Int
   total          BigInt?
