@@ -51,7 +51,7 @@ export class AuctionsMapper {
         auction: Auction & { Rounds: Array<Round & { Bids: Array<Bid> }> },
         currentDate: Date,
     ): 'waiting' | 'active' | 'finished' {
-        const lastBid = RoundsMapper.getLastBid(auction.Rounds);
+        const lastBid = RoundsMapper.getLastBidOfRounds(auction.Rounds);
 
         if (auction.auctionStartAt > currentDate) {
             return 'waiting';

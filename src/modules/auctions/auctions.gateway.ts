@@ -91,7 +91,7 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
                 return;
             }
 
-            const lastBid = RoundsMapper.getLastBid(lastUpdatedAuction.Rounds);
+            const lastBid = RoundsMapper.getLastBidOfRounds(lastUpdatedAuction.Rounds);
 
             if (!lastBid) {
                 return;

@@ -9,7 +9,6 @@ import { UsersService } from '../users/users.service';
 import { DefaultAuctionStrategy } from './auction-strategies/default-auction-strategy';
 import { BidsService } from '../bids/bids.service';
 import { MakeBidDto } from './dtos/MakeBidDto';
-import { UpdateBidDto } from '../bids/dtos/UpdateBidDto';
 import { AuctionsMapper } from './auctions.mapper';
 import { PseudonymsService } from '../pseudonyms/pseudonyms.service';
 
@@ -163,7 +162,7 @@ export class AuctionsService {
     }
 
     async createInititalBid(dto: CreateInitialBidDto, userId: string, auctionId: string) {
-        const auction = await this.auctionsRepository.findAuctionWithRoundsAndBids({
+        const auction = await this.auctionsRepository.findAuctionWithRoundsBidsUsers({
             auctionId,
         });
 
@@ -186,7 +185,7 @@ export class AuctionsService {
     }
 
     async removeInititalBid(userId: string, auctionId: string) {
-        const auction = await this.auctionsRepository.findAuctionWithRoundsAndBids({
+        const auction = await this.auctionsRepository.findAuctionWithRoundsBidsUsers({
             auctionId,
         });
 
@@ -209,11 +208,21 @@ export class AuctionsService {
     }
 
     async makeUserBit(dto: MakeBidDto, userId: string, auctionId: string) {
-        const data: UpdateBidDto = {
-            total: dto.total,
-            totalUpdatedAt: new Date(),
-        };
-        await this.bidsService.updateCurrentBid(data, auctionId, userId);
+        const currentTime = new Date();
+
+        const auction = await this.auctionsRepository.findAuctionWithRoundsBidsUsers({
+            auctionId,
+        });
+
+        if (auction === null) {
+            throw new NotFoundException(`Auction with id ${auctionId} doesn't exist`);
+        }
+
+        const strategy = new DefaultAuctionStrategy(auction);
+
+        const roundsWithBidsForUpdate = await strategy.makeBid(dto, userId, currentTime);
+
+        return this.roundsService.updateRoundsWithBids(roundsWithBidsForUpdate);
     }
 
     async getParticipationData(userId: string, auctionId: string) {

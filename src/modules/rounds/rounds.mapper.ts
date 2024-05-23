@@ -13,22 +13,18 @@ export class RoundsMapper {
             return [];
         }
 
-        const allBidsDates = rounds
-            .map((round) => {
-                return round.Bids.map((bid) => bid.endAt);
-            })
-            .flat();
+        const lastBid = RoundsMapper.getLastBidOfRounds(rounds);
 
-        const lastBidEndAt = allBidsDates.length
-            ? allBidsDates.reduce((latestDate, currDate) =>
-                  latestDate < currDate ? currDate : latestDate,
-              )
-            : firstRoundStartAt;
+        if (!lastBid) {
+            return [];
+        }
+
+        const lastBidEndAt = lastBid.endAt;
 
         if (currentDate > lastBidEndAt) {
             const preparedRounds = rounds.map((round) => {
-                const firstBid = RoundsMapper.getFirstBid([round]);
-                const lastBid = RoundsMapper.getLastBid([round]);
+                const firstBid = RoundsMapper.getFirstBidOfRound(round);
+                const lastBid = RoundsMapper.getLastBidOfRound(round);
 
                 const roundTimeData = {
                     startAt: firstBid ? firstBid.startAt : firstRoundStartAt,
@@ -83,8 +79,8 @@ export class RoundsMapper {
         }
 
         const preparedRounds = rounds.map((round) => {
-            const firstBid = RoundsMapper.getFirstBid([round]);
-            const lastBid = RoundsMapper.getLastBid([round]);
+            const firstBid = RoundsMapper.getFirstBidOfRound(round);
+            const lastBid = RoundsMapper.getLastBidOfRound(round);
 
             const roundTimeData = {
                 startAt: firstBid ? firstBid.startAt : firstRoundStartAt,
@@ -151,13 +147,44 @@ export class RoundsMapper {
         return lastBid || null;
     }
 
+    public static toFilledRounds(
+        rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>,
+    ): Array<Round & { Bids: Array<Bid & { User: User }> }> {
+        return rounds.map((round) => {
+            const Bids = round.Bids.map((bid): Bid & { User: User } => {
+                const lastBidWithTotal = this.getLastBidWithFilledTotal(
+                    rounds,
+                    bid.userId,
+                    round.sequenceNumber,
+                );
+
+                const total = bid.total ? bid.total : lastBidWithTotal.total || 0;
+                const adjustedPrice = bid.adjustedPrice
+                    ? bid.adjustedPrice
+                    : lastBidWithTotal.adjustedPrice || 0;
+                const years = bid.years ? bid.years : lastBidWithTotal.years || 0;
+                const days = bid.days ? bid.days : lastBidWithTotal.days || 0;
+                const percent = bid.percent ? bid.percent : lastBidWithTotal.percent || 0;
+                return {
+                    ...bid,
+                    total: BigInt(total),
+                    adjustedPrice: BigInt(adjustedPrice),
+                    years,
+                    days,
+                    percent,
+                };
+            });
+            return { ...round, Bids };
+        });
+    }
+
     public static toAdminRounds(
         rounds: Array<Round & { Bids: Array<Bid & { User: User & { Pseudonym: Pseudonym[] } }> }>,
         firstRoundStartAt: Date,
     ) {
         const preparedRounds = rounds.map((round) => {
-            const firstBid = RoundsMapper.getFirstBid([round]);
-            const lastBid = RoundsMapper.getLastBid([round]);
+            const firstBid = RoundsMapper.getFirstBidOfRound(round);
+            const lastBid = RoundsMapper.getLastBidOfRound(round);
 
             const roundTimeData = {
                 startAt: firstBid ? firstBid.startAt : firstRoundStartAt,
@@ -196,7 +223,7 @@ export class RoundsMapper {
         return preparedRounds;
     }
 
-    static getFirstBid(rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>) {
+    static getFirstBidOfRounds(rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>) {
         const allBids = rounds.map((round) => round.Bids).flat();
 
         if (!allBids.length) {
@@ -212,8 +239,39 @@ export class RoundsMapper {
         return firstBid;
     }
 
-    static getLastBid(rounds: Array<Round & { Bids: Array<Bid> }>) {
+    static getLastBidOfRounds(rounds: Array<Round & { Bids: Array<Bid> }>) {
         const allBids = rounds.map((round) => round.Bids).flat();
+
+        if (!allBids.length) {
+            return null;
+        }
+        const sortedBids = allBids.sort(
+            (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime(),
+        );
+
+        const lastBid = sortedBids[sortedBids.length - 1];
+
+        return lastBid;
+    }
+
+    static getFirstBidOfRound(round: Round & { Bids: Array<Bid> }) {
+        const allBids = round.Bids;
+
+        if (!allBids.length) {
+            return null;
+        }
+
+        const sortedBids = allBids.sort(
+            (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime(),
+        );
+
+        const firstBid = sortedBids[0];
+
+        return firstBid;
+    }
+
+    static getLastBidOfRound(round: Round & { Bids: Array<Bid> }) {
+        const allBids = round.Bids;
 
         if (!allBids.length) {
             return null;

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Bid, Prisma, Round } from '@prisma/client';
+import { Bid, Prisma, Round, User } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 
 @Injectable()
@@ -30,21 +30,53 @@ export class RoundsRepository {
         return this.prisma.round.createMany({ data });
     }
 
-    async updateRoundsWithBids(params: { data: Array<Round & { Bids: Bid[] }> }) {
+    async updateRoundsWithBids(params: {
+        data: Array<Round & { Bids: Array<Bid & { User?: User }> }>;
+    }) {
         const { data } = params;
         const queries = [];
-
+        const bidIds = [];
         for (const round of data) {
-            queries.push(this.prisma.bid.deleteMany({ where: { roundId: round.id } }));
+            bidIds.push(...round.Bids.map(({ id }) => id));
         }
 
+        queries.push(
+            this.prisma.bid.deleteMany({
+                where: {
+                    id: {
+                        in: bidIds,
+                    },
+                },
+            }),
+        );
+        const newBids: Prisma.BidCreateManyInput[] = [];
         for (const round of data) {
-            queries.push(
-                this.prisma.bid.createMany({
-                    data: round.Bids,
+            newBids.push(
+                ...round.Bids.map((bid) => {
+                    return {
+                        id: bid.id,
+                        roundId: bid.roundId,
+                        total: bid.total,
+                        totalUpdatedAt: bid.totalUpdatedAt,
+                        coefficient: bid.coefficient,
+                        adjustedPrice: bid.adjustedPrice,
+                        years: bid.years,
+                        days: bid.years,
+                        percent: bid.percent,
+                        sequenceNumber: bid.sequenceNumber,
+                        startAt: bid.startAt,
+                        endAt: bid.endAt,
+                        userId: bid.userId,
+                    };
                 }),
             );
         }
+
+        queries.push(
+            this.prisma.bid.createMany({
+                data: newBids,
+            }),
+        );
 
         return this.prisma.$transaction(queries);
     }

@@ -1,13 +1,23 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { Auction, Bid, Round } from '@prisma/client';
+import { Auction, Bid, Round, User } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { CreateInitialBidDto } from '../dtos/CreateInitialBidDto';
 import { AuctionStrategy } from './auction-strategy';
+import { MakeBidDto } from '../dtos/MakeBidDto';
+import { RoundsMapper } from 'src/modules/rounds/rounds.mapper';
 
 export class DefaultAuctionStrategy implements AuctionStrategy {
-    constructor(private auction: Auction & { Rounds: Array<Round & { Bids: Bid[] }> }) {}
+    constructor(
+        private auction: Auction & {
+            Rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>;
+        },
+    ) {}
 
-    private getUserOrderForRound(initRoundWithBids: Round & { Bids: Bid[] }) {
+    private getUserOrderForRound(
+        initRoundWithBids: Round & {
+            Bids: Array<Bid>;
+        },
+    ) {
         const bids = initRoundWithBids.Bids || [];
 
         bids.sort((bidA, bidB) => {
@@ -73,9 +83,12 @@ export class DefaultAuctionStrategy implements AuctionStrategy {
     ): Array<Round & { Bids: Bid[] }> {
         const currentDate = new Date(firstRoundStartAt);
         const updatedRounds: Array<Round & { Bids: Bid[] }> = [];
+        const sequenceNumbers = [...roundsWithBids.map((round) => round.sequenceNumber)].sort();
+        for (const roundSequenceNumber of sequenceNumbers) {
+            const round = roundsWithBids.find(
+                (round) => round.sequenceNumber === roundSequenceNumber,
+            );
 
-        for (let i = 0; i < roundsWithBids.length; i++) {
-            const round = roundsWithBids.find(({ sequenceNumber }) => sequenceNumber === i);
             const bids = round.Bids;
 
             const sortedBids: Bid[] = [];
@@ -83,7 +96,7 @@ export class DefaultAuctionStrategy implements AuctionStrategy {
             for (let j = 0; j < usersOrder.length; j++) {
                 const bid = bids.find(({ userId }) => userId === usersOrder[j].userId);
 
-                if (i === 0) {
+                if (roundSequenceNumber === 0) {
                     const smallestDate = new Date(0);
 
                     sortedBids.push({
@@ -111,9 +124,81 @@ export class DefaultAuctionStrategy implements AuctionStrategy {
         return updatedRounds;
     }
 
-    // async makeBid(total) {
+    async makeBid(dto: MakeBidDto, userId: string, currentTime: Date) {
+        const rounds = this.auction.Rounds;
+        const filledRounds = RoundsMapper.toFilledRounds(this.auction.Rounds);
 
-    // }
+        const { timeForRoundInSecs } = this.auction;
+
+        if (rounds.length < 4) {
+            throw new HttpException(
+                'Кількість раундів не коректна',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+
+        const roundsForUpdate = rounds
+            .filter((round) => {
+                const firstBid = RoundsMapper.getFirstBidOfRound(round);
+
+                return currentTime < firstBid.startAt;
+            })
+            .map((round) => ({ ...round }));
+
+        const currentRound = filledRounds.find((round) => {
+            const firstBid = RoundsMapper.getFirstBidOfRound(round);
+            const lastBid = RoundsMapper.getLastBidOfRound(round);
+
+            return firstBid.startAt < currentTime && lastBid.endAt > currentTime;
+        });
+
+        if (!currentRound) {
+            throw new HttpException('Хід для користувача не знайден', HttpStatus.FORBIDDEN);
+        }
+
+        const updatedCurrentRound = { ...currentRound };
+
+        updatedCurrentRound.Bids = updatedCurrentRound.Bids.map((bid) => {
+            if (bid.userId !== userId) {
+                return bid;
+            }
+            return {
+                ...bid,
+                total: BigInt(dto.total),
+                totalUpdatedAt: currentTime,
+            };
+        });
+
+        if (roundsForUpdate.length === 0) {
+            return [updatedCurrentRound];
+        }
+
+        const usersOrder = this.getUserOrderForRound(updatedCurrentRound);
+        console.log('ORDER - ', usersOrder, usersOrder);
+        console.log('USERS ORDER', updatedCurrentRound.Bids);
+        const fisrtBid = RoundsMapper.getFirstBidOfRounds(roundsForUpdate);
+
+        const updatedRounds = this.getRoundsWithSortedBids(
+            roundsForUpdate,
+            usersOrder,
+            fisrtBid.startAt,
+            Number(timeForRoundInSecs),
+        );
+
+        return [updatedCurrentRound, ...updatedRounds];
+    }
+
+    private updateBidsOrderInRounds(
+        rounds: Array<Round & { Bid: Array<Bid> }>,
+        usersOrder: string[],
+    ) {
+        for (const round of rounds) {
+            for (const bid of round.Bid) {
+                const sequenceNumber = usersOrder.indexOf(bid.userId);
+                bid.sequenceNumber = sequenceNumber;
+            }
+        }
+    }
 
     async createInititalBid(dto: CreateInitialBidDto, userId: string) {
         const rounds = this.auction.Rounds;
