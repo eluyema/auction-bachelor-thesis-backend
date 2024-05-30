@@ -6,7 +6,7 @@ import { AuctionStrategy } from './auction-strategy';
 import { MakeBidDto } from '../dtos/MakeBidDto';
 import { RoundsMapper } from 'src/modules/rounds/rounds.mapper';
 
-export class DefaultAuctionStrategy implements AuctionStrategy {
+export class NonPriceCriteriaAuctionStrategy implements AuctionStrategy {
     constructor(
         private auction: Auction & {
             Rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>;
@@ -21,8 +21,8 @@ export class DefaultAuctionStrategy implements AuctionStrategy {
         const bids = initRoundWithBids.Bids || [];
 
         bids.sort((bidA, bidB) => {
-            if (bidA.total !== bidB.total) {
-                return Number(bidB.total) - Number(bidA.total); // the less money will be last
+            if (bidA.adjustedPrice !== bidB.adjustedPrice) {
+                return Number(bidB.adjustedPrice) - Number(bidA.adjustedPrice); // the less money will be last
             }
 
             return bidB.totalUpdatedAt.getTime() - bidA.totalUpdatedAt.getTime(); // the fisrt time will be first
@@ -47,10 +47,17 @@ export class DefaultAuctionStrategy implements AuctionStrategy {
         newBidDto: CreateInitialBidDto,
         userId: string,
     ) {
+        if (!newBidDto.coefficient || !newBidDto.total) {
+            throw new HttpException('Missed coefficent or total', HttpStatus.BAD_REQUEST);
+        }
         return roundsWithBids.map((round) => {
             const dateNow = new Date();
 
             const total = round.sequenceNumber === 0 ? BigInt(newBidDto.total) : null;
+            const adjustedPrice =
+                round.sequenceNumber === 0
+                    ? BigInt((newBidDto.total / newBidDto.coefficient).toFixed(0).toString())
+                    : null;
             const totalUpdatedAt = round.sequenceNumber === 0 ? dateNow : null;
 
             const bids = round.Bids;
@@ -67,13 +74,14 @@ export class DefaultAuctionStrategy implements AuctionStrategy {
                 years: null,
                 days: null,
                 percent: null,
-                coefficient: null,
-                adjustedPrice: null,
+                coefficient: newBidDto.coefficient,
+                adjustedPrice,
             };
 
             return { ...round, Bids: [...bids, newBid] };
         });
     }
+
     //TODO: refactor
     private getRoundsWithSortedBids(
         roundsWithBids: Array<Round & { Bids: Bid[] }>,
@@ -125,6 +133,10 @@ export class DefaultAuctionStrategy implements AuctionStrategy {
     }
 
     async makeBid(dto: MakeBidDto, userId: string, currentTime: Date) {
+        if (!dto.total) {
+            throw new HttpException('Missed total', HttpStatus.BAD_REQUEST);
+        }
+        console.log('MMM?');
         const rounds = this.auction.Rounds;
         const filledRounds = RoundsMapper.toFilledRounds(this.auction.Rounds);
 
@@ -162,9 +174,20 @@ export class DefaultAuctionStrategy implements AuctionStrategy {
             if (bid.userId !== userId) {
                 return bid;
             }
+            if (!bid.coefficient) {
+                throw new HttpException(
+                    'Відсутній коефіцієнт у записі ставки',
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                );
+            }
+            console.log({
+                total: BigInt(dto.total),
+                adjustedPrice: BigInt((dto.total / bid.coefficient).toFixed(0).toString()),
+            });
             return {
                 ...bid,
                 total: BigInt(dto.total),
+                adjustedPrice: BigInt((dto.total / bid.coefficient).toFixed(0).toString()),
                 totalUpdatedAt: currentTime,
             };
         });

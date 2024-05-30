@@ -1,5 +1,5 @@
 export class CreateInitialBidDto {
-    total: number;
+    total?: number;
     coefficient?: number;
     years?: number;
     days?: number;

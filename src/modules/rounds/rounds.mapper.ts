@@ -97,10 +97,14 @@ export class RoundsMapper {
                 );
 
                 const total = bid.total ? bid.total : lastBidWithTotal.total || 0;
+                const adjustedPrice = bid.adjustedPrice
+                    ? bid.adjustedPrice
+                    : lastBidWithTotal.adjustedPrice || 0;
 
                 return {
                     ...bid,
                     total: auctionType === AuctionType.NON_PRICE_CRITERIA ? null : total,
+                    adjustedPrice,
                     pseudonym: Pseudonym ? Pseudonym.value : null,
                     User: null,
                     userId: undefined,

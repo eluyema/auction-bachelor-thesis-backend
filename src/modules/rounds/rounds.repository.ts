@@ -36,15 +36,17 @@ export class RoundsRepository {
         const { data } = params;
         const queries = [];
         const bidIds = [];
+        const roundIds = [];
         for (const round of data) {
             bidIds.push(...round.Bids.map(({ id }) => id));
+            roundIds.push(round.id);
         }
 
         queries.push(
             this.prisma.bid.deleteMany({
                 where: {
-                    id: {
-                        in: bidIds,
+                    roundId: {
+                        in: roundIds,
                     },
                 },
             }),

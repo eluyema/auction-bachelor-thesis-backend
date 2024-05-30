@@ -41,6 +41,7 @@ model Auction {
   id                 String      @id @default(uuid())
   auctionType        AuctionType @default(DEFAULT)
   name               String
+  cashFlow           BigInt?
   purchaseCode       String
   customerName       String
   expectedCost       BigInt

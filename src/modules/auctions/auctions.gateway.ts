@@ -39,7 +39,6 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
             }
             await this.setupUpdateEvents(auctionId);
             client.join(auctionId);
-            console.log(`Client ${client.id} connected and joined auction ${auctionId}`);
             this.sendUpdateRoundsEvent(auctionId, auction.Rounds);
         } else {
             client.disconnect();
@@ -69,7 +68,6 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
         const status = this.schedulerRegistry.doesExist('timeout', onStartEvent);
 
         if (status) {
-            console.log('Already setuped');
             return;
         }
 
@@ -86,7 +84,6 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
         const onFirstRoundStartAt = async () => {
             this.loadAndSendUpdatedRoundsEvent(auctionId);
             const lastUpdatedAuction = await this.auctionsService.getNestedAuction(auctionId);
-            console.log('onFirstRoundStartAt', auctionId, lastUpdatedAuction);
             if (!lastUpdatedAuction) {
                 return;
             }
@@ -128,7 +125,6 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
             const timeout = setTimeout(job, delay);
 
             this.schedulerRegistry.addTimeout(name, timeout);
-            console.log(`Timeout job ${name} added for auction ${auctionId} at ${startTime}`);
         } catch (err) {
             console.error(err);
         }
@@ -136,6 +132,5 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
 
     deleteTimeoutJob(name: string) {
         this.schedulerRegistry.deleteTimeout(name);
-        console.log(`Timeout job ${name} deleted`);
     }
 }

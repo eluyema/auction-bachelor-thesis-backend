@@ -11,6 +11,7 @@ import { BidsService } from '../bids/bids.service';
 import { MakeBidDto } from './dtos/MakeBidDto';
 import { AuctionsMapper } from './auctions.mapper';
 import { PseudonymsService } from '../pseudonyms/pseudonyms.service';
+import { AuctionStrategyFactory } from './auction-strategies/auction-strategy-factory';
 
 @Injectable()
 export class AuctionsService {
@@ -170,7 +171,7 @@ export class AuctionsService {
             throw new NotFoundException(`Auction with id ${auctionId} doesn't exist`);
         }
 
-        const strategy = new DefaultAuctionStrategy(auction);
+        const strategy = AuctionStrategyFactory.getStrategyInstance(auction);
 
         const roundsWithBidsForUpdate = await strategy.createInititalBid(dto, userId);
 
@@ -218,7 +219,7 @@ export class AuctionsService {
             throw new NotFoundException(`Auction with id ${auctionId} doesn't exist`);
         }
 
-        const strategy = new DefaultAuctionStrategy(auction);
+        const strategy = AuctionStrategyFactory.getStrategyInstance(auction);
 
         const roundsWithBidsForUpdate = await strategy.makeBid(dto, userId, currentTime);
 
@@ -243,6 +244,7 @@ export class AuctionsService {
         return {
             isParticipant: true,
             pseudonym,
+            coefficient: userInitialBid.coefficient,
         };
     }
 }
