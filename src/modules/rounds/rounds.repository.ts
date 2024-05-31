@@ -63,7 +63,7 @@ export class RoundsRepository {
                         coefficient: bid.coefficient,
                         adjustedPrice: bid.adjustedPrice,
                         years: bid.years,
-                        days: bid.years,
+                        days: bid.days,
                         percent: bid.percent,
                         sequenceNumber: bid.sequenceNumber,
                         startAt: bid.startAt,

@@ -12,6 +12,7 @@ import { MakeBidDto } from './dtos/MakeBidDto';
 import { AuctionsMapper } from './auctions.mapper';
 import { PseudonymsService } from '../pseudonyms/pseudonyms.service';
 import { AuctionStrategyFactory } from './auction-strategies/auction-strategy-factory';
+import { RoundsMapper } from '../rounds/rounds.mapper';
 
 @Injectable()
 export class AuctionsService {
@@ -241,10 +242,19 @@ export class AuctionsService {
             ? userInitialBid.User.Pseudonym[0].value
             : null;
 
+        const auction = await this.auctionsRepository.findAuctionWithRoundsBidsUsers({
+            auctionId,
+        });
+
+        const bid = RoundsMapper.getLastBidWithFilledTotal(auction.Rounds, userId, 3);
+
         return {
             isParticipant: true,
             pseudonym,
             coefficient: userInitialBid.coefficient,
+            lastYears: bid.years,
+            lastDays: bid.days,
+            lastPercent: bid.percent,
         };
     }
 }

@@ -121,7 +121,7 @@ export class RoundsMapper {
         return preparedRounds;
     }
 
-    private static getLastBidWithFilledTotal(
+    static getLastBidWithFilledTotal(
         rounds: Array<Round & { Bids: Array<Bid & { User?: User }> }>,
         userId: string,
         currentSequenceNumber: number,

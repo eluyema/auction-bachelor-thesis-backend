@@ -6,12 +6,54 @@ import { AuctionStrategy } from './auction-strategy';
 import { MakeBidDto } from '../dtos/MakeBidDto';
 import { RoundsMapper } from 'src/modules/rounds/rounds.mapper';
 
-export class NonPriceCriteriaAuctionStrategy implements AuctionStrategy {
+export class ESCOAuctionStrategy implements AuctionStrategy {
     constructor(
         private auction: Auction & {
             Rounds: Array<Round & { Bids: Array<Bid & { User: User }> }>;
         },
     ) {}
+
+    getNPV(
+        contractYears: number,
+        extraDays: number,
+        cashFlow: number,
+        discountRate: number,
+    ): number {
+        if (
+            contractYears < 0 ||
+            contractYears > 15 ||
+            extraDays < 0 ||
+            extraDays > 364 ||
+            discountRate < 0 ||
+            discountRate > 100 ||
+            cashFlow <= 0
+        ) {
+            throw new Error('Invalid input parameters.');
+        }
+
+        const rate = discountRate / 100;
+
+        const totalTimeInYears = contractYears + extraDays / 365;
+        const fullYears = Math.floor(totalTimeInYears);
+        const fractionalYear = totalTimeInYears - fullYears;
+
+        const cashFlows = Array(fullYears).fill(cashFlow);
+        if (fractionalYear > 0) {
+            cashFlows.push(cashFlow * (extraDays / 365));
+        }
+
+        function calculateNPV(rate: number, cashFlows: number[]): number {
+            let npv = 0;
+            for (let i = 0; i < cashFlows.length; i++) {
+                npv += cashFlows[i] / Math.pow(1 + rate, i + 1);
+            }
+            return npv;
+        }
+
+        const npv = calculateNPV(rate, cashFlows);
+
+        return Math.ceil(npv);
+    }
 
     private getUserOrderForRound(
         initRoundWithBids: Round & {
@@ -21,11 +63,11 @@ export class NonPriceCriteriaAuctionStrategy implements AuctionStrategy {
         const bids = initRoundWithBids.Bids || [];
 
         bids.sort((bidA, bidB) => {
-            if (bidA.adjustedPrice !== bidB.adjustedPrice) {
-                return Number(bidB.adjustedPrice) - Number(bidA.adjustedPrice); // the less money will be last
+            if (bidA.total !== bidB.total) {
+                return Number(bidA.total) - Number(bidB.total);
             }
 
-            return bidB.totalUpdatedAt.getTime() - bidA.totalUpdatedAt.getTime(); // the fisrt time will be first
+            return bidB.totalUpdatedAt.getTime() - bidA.totalUpdatedAt.getTime();
         });
 
         return bids.map(({ userId }) => ({ userId }));
@@ -47,16 +89,20 @@ export class NonPriceCriteriaAuctionStrategy implements AuctionStrategy {
         newBidDto: CreateInitialBidDto,
         userId: string,
     ) {
-        if (!newBidDto.coefficient || !newBidDto.total) {
-            throw new HttpException('Missed coefficent or total', HttpStatus.BAD_REQUEST);
+        const { cashFlow } = this.auction;
+
+        if (!cashFlow) {
+            throw new HttpException('cashFlow is unset', HttpStatus.INTERNAL_SERVER_ERROR);
         }
+
+        const { years, days, percent } = newBidDto;
+
         return roundsWithBids.map((round) => {
             const dateNow = new Date();
 
-            const total = round.sequenceNumber === 0 ? BigInt(newBidDto.total) : null;
-            const adjustedPrice =
+            const total =
                 round.sequenceNumber === 0
-                    ? BigInt((newBidDto.total / newBidDto.coefficient).toFixed(0).toString())
+                    ? BigInt(this.getNPV(years, days, Number(cashFlow), percent))
                     : null;
             const totalUpdatedAt = round.sequenceNumber === 0 ? dateNow : null;
 
@@ -71,11 +117,11 @@ export class NonPriceCriteriaAuctionStrategy implements AuctionStrategy {
                 total,
                 userId: userId,
                 roundId: round.id,
-                years: null,
-                days: null,
-                percent: null,
+                years: newBidDto.years,
+                days: newBidDto.days,
+                percent: newBidDto.percent,
                 coefficient: newBidDto.coefficient,
-                adjustedPrice,
+                adjustedPrice: null,
             };
 
             return { ...round, Bids: [...bids, newBid] };
@@ -129,18 +175,31 @@ export class NonPriceCriteriaAuctionStrategy implements AuctionStrategy {
 
             updatedRounds.push(updatedRound);
         }
+
         return updatedRounds;
     }
 
     async makeBid(dto: MakeBidDto, userId: string, currentTime: Date) {
-        if (!dto.total) {
-            throw new HttpException('Missed total', HttpStatus.BAD_REQUEST);
+        const { years, days, percent } = dto;
+
+        if (!Number.isInteger(years) || !Number.isInteger(days) || !Number.isInteger(percent)) {
+            throw new HttpException(
+                'Missed years or days or percent or some of them not integer',
+                HttpStatus.BAD_REQUEST,
+            );
         }
 
         const rounds = this.auction.Rounds;
         const filledRounds = RoundsMapper.toFilledRounds(this.auction.Rounds);
 
-        const { timeForRoundInSecs } = this.auction;
+        const { timeForRoundInSecs, cashFlow } = this.auction;
+
+        if (!cashFlow) {
+            throw new HttpException(
+                'Missed cashFlow in auction data',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
 
         if (rounds.length < 4) {
             throw new HttpException(
@@ -174,17 +233,13 @@ export class NonPriceCriteriaAuctionStrategy implements AuctionStrategy {
             if (bid.userId !== userId) {
                 return bid;
             }
-            if (!bid.coefficient) {
-                throw new HttpException(
-                    'Відсутній коефіцієнт у записі ставки',
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                );
-            }
 
             return {
                 ...bid,
-                total: BigInt(dto.total),
-                adjustedPrice: BigInt((dto.total / bid.coefficient).toFixed(0).toString()),
+                total: BigInt(this.getNPV(years, days, Number(cashFlow), percent)),
+                years,
+                days,
+                percent,
                 totalUpdatedAt: currentTime,
             };
         });
@@ -206,22 +261,26 @@ export class NonPriceCriteriaAuctionStrategy implements AuctionStrategy {
         return [updatedCurrentRound, ...updatedRounds];
     }
 
-    private updateBidsOrderInRounds(
-        rounds: Array<Round & { Bid: Array<Bid> }>,
-        usersOrder: string[],
-    ) {
-        for (const round of rounds) {
-            for (const bid of round.Bid) {
-                const sequenceNumber = usersOrder.indexOf(bid.userId);
-                bid.sequenceNumber = sequenceNumber;
-            }
-        }
-    }
-
     async createInititalBid(dto: CreateInitialBidDto, userId: string) {
+        const { years, days, percent } = dto;
+
+        if (!Number.isInteger(years) || !Number.isInteger(days) || !Number.isInteger(percent)) {
+            throw new HttpException(
+                'Missed years or days or percent or some of them not integer',
+                HttpStatus.BAD_REQUEST,
+            );
+        }
+
         const rounds = this.auction.Rounds;
 
-        const { firstRoundStartAt, timeForRoundInSecs } = this.auction;
+        const { firstRoundStartAt, timeForRoundInSecs, cashFlow } = this.auction;
+
+        if (!cashFlow) {
+            throw new HttpException(
+                'Missed cashFlow in auction data',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
 
         if (rounds.length < 4) {
             throw new HttpException(
