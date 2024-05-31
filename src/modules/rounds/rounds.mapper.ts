@@ -22,6 +22,7 @@ export class RoundsMapper {
         const lastBidEndAt = lastBid.endAt;
 
         if (currentDate > lastBidEndAt) {
+            console.log('send full access');
             const preparedRounds = rounds.map((round) => {
                 const firstBid = RoundsMapper.getFirstBidOfRound(round);
                 const lastBid = RoundsMapper.getLastBidOfRound(round);
@@ -114,7 +115,7 @@ export class RoundsMapper {
                     coefficient: null,
                 };
             });
-
+            console.log('send only part of full data');
             return { ...round, ...roundTimeData, Bids: preparedBids };
         });
 
