@@ -117,11 +117,11 @@ describe('ESCOAuctionStrategy', () => {
             id: '79a27f07-3fdd-47d1-a71f-96bb6d6b1a3b',
             auctionType: 'NON_PRICE_CRITERIA',
             name: 'non price 22',
-            cashFlow: BigInt(10000),
+            cashFlow: BigInt(600000),
             purchaseCode: 'sdfasdf',
             customerName: 'dsafadsf',
-            expectedCost: BigInt(10000000),
-            decreaseStep: BigInt(100000),
+            expectedCost: BigInt(1000000),
+            decreaseStep: BigInt(10000),
             auctionStartAt: initRoundTime,
             firstRoundStartAt: firstRoundTime,
             timeForRoundInSecs: BigInt(40),
@@ -136,7 +136,7 @@ describe('ESCOAuctionStrategy', () => {
                             id: 'a6a800ee-6788-4d70-8dc2-54f6d11eda64',
                             roundId: 'd63be640-9d45-4a2c-b857-78c68797eede',
                             sequenceNumber: 0,
-                            total: BigInt(10000000),
+                            total: BigInt(1200000),
                             adjustedPrice: null,
                             coefficient: null,
                             years: null,
@@ -157,7 +157,7 @@ describe('ESCOAuctionStrategy', () => {
                             id: 'f1cc8d8a-e266-43ce-b399-0b7d16aad1e8',
                             roundId: 'd63be640-9d45-4a2c-b857-78c68797eede',
                             sequenceNumber: 1,
-                            total: BigInt(10000000),
+                            total: BigInt(1000000),
                             adjustedPrice: null,
                             coefficient: null,
                             years: null,
@@ -185,7 +185,7 @@ describe('ESCOAuctionStrategy', () => {
                             id: 'b487c5ea-676f-4e44-a722-e3e6a02cdaab',
                             roundId: '23e1bfb5-cb4f-4eb4-81fd-ac1f143bb101',
                             sequenceNumber: 0,
-                            total: BigInt(8000000),
+                            total: BigInt(1200000),
                             adjustedPrice: null,
                             coefficient: null,
                             years: null,
@@ -206,7 +206,7 @@ describe('ESCOAuctionStrategy', () => {
                             id: '999df977-b18e-4849-955f-a917bb17dab6',
                             roundId: '23e1bfb5-cb4f-4eb4-81fd-ac1f143bb101',
                             sequenceNumber: 1,
-                            total: BigInt(10000000),
+                            total: BigInt(1000000),
                             adjustedPrice: null,
                             coefficient: null,
                             years: null,
@@ -234,7 +234,7 @@ describe('ESCOAuctionStrategy', () => {
                             id: '8cc073e0-1e29-4f38-a531-898e1bc3f648',
                             roundId: 'd2d06ffe-7e08-45d3-966a-daf4600ee7eb',
                             sequenceNumber: 0,
-                            total: BigInt(8200000),
+                            total: BigInt(1200000),
                             adjustedPrice: null,
                             coefficient: null,
                             years: null,
@@ -255,7 +255,7 @@ describe('ESCOAuctionStrategy', () => {
                             id: 'c38e3890-126e-43de-8ed4-ea3654c5983f',
                             roundId: 'd2d06ffe-7e08-45d3-966a-daf4600ee7eb',
                             sequenceNumber: 1,
-                            total: BigInt(8000000),
+                            total: BigInt(1000000),
                             adjustedPrice: null,
                             coefficient: null,
                             years: null,
@@ -283,7 +283,7 @@ describe('ESCOAuctionStrategy', () => {
                             id: 'e840c572-d9e3-468e-858c-bf1f01289f14',
                             roundId: '9d56e706-954b-4cdf-b93d-f0da9515ee9a',
                             sequenceNumber: 0,
-                            total: BigInt(7783000),
+                            total: BigInt(1200000),
                             adjustedPrice: null,
                             coefficient: null,
                             years: null,
@@ -304,7 +304,7 @@ describe('ESCOAuctionStrategy', () => {
                             id: '63ac86fd-031c-4239-a03f-9ce3fedb63d2',
                             roundId: '9d56e706-954b-4cdf-b93d-f0da9515ee9a',
                             sequenceNumber: 1,
-                            total: BigInt(8200000),
+                            total: BigInt(1000000),
                             adjustedPrice: null,
                             coefficient: null,
                             years: null,
@@ -336,27 +336,19 @@ describe('ESCOAuctionStrategy', () => {
             );
             const result = await strategy.makeBid(makeBidDto, userThatBidding, biddingAt);
             expect(
-                result.some((round) => round.Bids.some((bid) => bid.total === BigInt(13620))),
+                result.some((round) => round.Bids.some((bid) => bid.total === BigInt(817163))),
             ).toBeTruthy();
         });
 
         test('the smallest bid must be first in next round', async () => {
-            const smallBid: MakeBidDto = { years: 1, days: 1, percent: 10 };
+            const smallBid: MakeBidDto = { years: 0, days: 60, percent: 10 };
             const smallBidUser = '1c5934d6-f63f-4d3b-bc8a-0b5b927ef0ee';
-
-            const bigBid: MakeBidDto = { years: 2, days: 2, percent: 5 };
-            const bigBidUser = '5eb377e5-8c9f-4fda-9996-983014ba0fdd';
 
             const biddingSmallAt = new Date(
                 new Date(secondRoundTime).setSeconds(secondRoundTime.getSeconds() + 17),
             );
 
-            const biddingBigAt = new Date(
-                new Date(secondRoundTime).setSeconds(secondRoundTime.getSeconds() + 27),
-            );
-
-            await strategy.makeBid(smallBid, smallBidUser, biddingSmallAt);
-            const result = await strategy.makeBid(bigBid, bigBidUser, biddingBigAt);
+            const result = await strategy.makeBid(smallBid, smallBidUser, biddingSmallAt);
 
             const firstSequenceNumber = 0;
 
@@ -369,21 +361,13 @@ describe('ESCOAuctionStrategy', () => {
         });
 
         test('the biggest bid must be last in next round', async () => {
-            const smallBid: MakeBidDto = { years: 1, days: 1, percent: 10 };
-            const smallBidUser = '1c5934d6-f63f-4d3b-bc8a-0b5b927ef0ee';
-
-            const bigBid: MakeBidDto = { years: 2, days: 2, percent: 5 };
+            const bigBid: MakeBidDto = { years: 15, days: 300, percent: 1 };
             const bigBidUser = '5eb377e5-8c9f-4fda-9996-983014ba0fdd';
-
-            const biddingSmallAt = new Date(
-                new Date(secondRoundTime).setSeconds(secondRoundTime.getSeconds() + 17),
-            );
 
             const biddingBigAt = new Date(
                 new Date(secondRoundTime).setSeconds(secondRoundTime.getSeconds() + 27),
             );
 
-            await strategy.makeBid(smallBid, smallBidUser, biddingSmallAt);
             const result = await strategy.makeBid(bigBid, bigBidUser, biddingBigAt);
 
             const lastSequenceNumber = result[result.length - 1].Bids.length - 1;
@@ -401,7 +385,38 @@ describe('ESCOAuctionStrategy', () => {
             const createBidDto: CreateInitialBidDto = { years: 5, days: 300, percent: 10 };
             const result = await strategy.createInitialBid(createBidDto, 'newUserId');
             expect(
-                result.some((round) => round.Bids.some((bid) => bid.total === BigInt(42548))),
+                result.some((round) => round.Bids.some((bid) => bid.total === BigInt(2552843))),
+            ).toBeTruthy();
+        });
+
+        test('the smallest bid must be first in first round', async () => {
+            const smallBid: CreateInitialBidDto = { years: 0, days: 60, percent: 10 };
+            const smallBidUser = 'new user id';
+
+            const result = await strategy.createInitialBid(smallBid, smallBidUser);
+
+            const firstSequenceNumber = 0;
+
+            expect(
+                result[1].Bids.some(
+                    (bid) =>
+                        bid.userId === smallBidUser && bid.sequenceNumber === firstSequenceNumber,
+                ),
+            ).toBeTruthy();
+        });
+
+        test('the biggest bid must be last in first round', async () => {
+            const bigBid: MakeBidDto = { years: 15, days: 300, percent: 1 };
+            const bigBidUser = 'new user id';
+
+            const result = await strategy.createInitialBid(bigBid, bigBidUser);
+
+            const lastSequenceNumber = result[1].Bids.length - 1;
+
+            expect(
+                result[1].Bids.some(
+                    (bid) => bid.userId === bigBidUser && bid.sequenceNumber === lastSequenceNumber,
+                ),
             ).toBeTruthy();
         });
     });

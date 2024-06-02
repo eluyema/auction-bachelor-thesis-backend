@@ -347,22 +347,14 @@ describe('NonPriceCriteriaAuctionStrategy', () => {
             ).toBeTruthy();
         });
         test('the smallest bid must be last in next round', async () => {
-            const smallBid: MakeBidDto = { total: 100 }; // this user have coeff 1.25
+            const smallBid: MakeBidDto = { total: 30 };
             const smallBidUser = '1c5934d6-f63f-4d3b-bc8a-0b5b927ef0ee';
-
-            const bigBid: MakeBidDto = { total: 120 }; // this user have coeff 1.3
-            const bigBidUser = '5eb377e5-8c9f-4fda-9996-983014ba0fdd';
 
             const biddingSmallAt = new Date(
                 new Date(secondRoundTime).setSeconds(secondRoundTime.getSeconds() + 17),
             );
 
-            const biddingBigAt = new Date(
-                new Date(secondRoundTime).setSeconds(secondRoundTime.getSeconds() + 27),
-            );
-
-            await strategy.makeBid(smallBid, smallBidUser, biddingSmallAt);
-            const result = await strategy.makeBid(bigBid, bigBidUser, biddingBigAt);
+            const result = await strategy.makeBid(smallBid, smallBidUser, biddingSmallAt);
 
             const lastSequenceNumber = result[result.length - 1].Bids.length - 1;
 
@@ -375,21 +367,13 @@ describe('NonPriceCriteriaAuctionStrategy', () => {
         });
 
         test('the biggest bid must be first', async () => {
-            const smallBid: MakeBidDto = { total: 5000 }; // this user have coeff 1.25
-            const smallBidUser = '1c5934d6-f63f-4d3b-bc8a-0b5b927ef0ee';
-
-            const bigBid: MakeBidDto = { total: 12000 }; // this user have coeff 1.3
+            const bigBid: MakeBidDto = { total: 12000 };
             const bigBidUser = '5eb377e5-8c9f-4fda-9996-983014ba0fdd';
-
-            const biddingSmallAt = new Date(
-                new Date(secondRoundTime).setSeconds(secondRoundTime.getSeconds() + 17),
-            );
 
             const biddingBigAt = new Date(
                 new Date(secondRoundTime).setSeconds(secondRoundTime.getSeconds() + 27),
             );
 
-            await strategy.makeBid(smallBid, smallBidUser, biddingSmallAt);
             const result = await strategy.makeBid(bigBid, bigBidUser, biddingBigAt);
 
             const firstSequenceNumber = 0;
@@ -413,6 +397,38 @@ describe('NonPriceCriteriaAuctionStrategy', () => {
                         (bid) =>
                             bid.total === BigInt(7500000) && bid.adjustedPrice === BigInt(6250000),
                     ),
+                ),
+            ).toBeTruthy();
+        });
+
+        test('the smallest bid must be last in first round', async () => {
+            const smallBid: CreateInitialBidDto = { total: 30, coefficient: 1.25 };
+            const smallBidUser = 'new user id';
+
+            const result = await strategy.createInitialBid(smallBid, smallBidUser);
+
+            const lastSequenceNumber = result[result.length - 1].Bids.length - 1;
+
+            expect(
+                result[1].Bids.some(
+                    (bid) =>
+                        bid.userId === smallBidUser && bid.sequenceNumber === lastSequenceNumber,
+                ),
+            ).toBeTruthy();
+        });
+
+        test('the biggest bid must be first in first round', async () => {
+            const bigBid: CreateInitialBidDto = { total: 12000, coefficient: 1.25 };
+            const bigBidUser = 'new user id';
+
+            const result = await strategy.createInitialBid(bigBid, bigBidUser);
+
+            const firstSequenceNumber = 0;
+
+            expect(
+                result[1].Bids.some(
+                    (bid) =>
+                        bid.userId === bigBidUser && bid.sequenceNumber === firstSequenceNumber,
                 ),
             ).toBeTruthy();
         });
