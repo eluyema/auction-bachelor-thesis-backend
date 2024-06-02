@@ -366,8 +366,6 @@ describe('NonPriceCriteriaAuctionStrategy', () => {
 
             const lastSequenceNumber = result[result.length - 1].Bids.length - 1;
 
-            console.log(result.flatMap((round) => round.Bids));
-
             expect(
                 result[result.length - 1].Bids.some(
                     (bid) =>

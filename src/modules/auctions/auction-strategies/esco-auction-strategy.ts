@@ -60,21 +60,15 @@ export class ESCOAuctionStrategy implements AuctionStrategy {
             Bids: Array<Bid>;
         },
     ) {
-        console.log('start again');
-        console.log(initRoundWithBids);
         const bids = initRoundWithBids.Bids || [];
-        console.log(1);
         bids.sort((bidA, bidB) => {
-            console.log(666);
             if (bidA.total !== bidB.total) {
                 return Number(bidA.total) - Number(bidB.total);
             }
 
             return bidB.totalUpdatedAt.getTime() - bidA.totalUpdatedAt.getTime();
         });
-        console.log(3);
 
-        console.log(bids.map(({ userId }) => ({ userId })));
         return bids.map(({ userId }) => ({ userId }));
     }
 
@@ -185,17 +179,14 @@ export class ESCOAuctionStrategy implements AuctionStrategy {
     }
 
     async makeBid(dto: MakeBidDto, userId: string, currentTime: Date) {
-        console.log('make bid esco');
-
         const { years, days, percent } = dto;
-        console.log(1);
+
         if (!Number.isInteger(years) || !Number.isInteger(days) || !Number.isInteger(percent)) {
             throw new HttpException(
                 'Missed years or days or percent or some of them not integer',
                 HttpStatus.BAD_REQUEST,
             );
         }
-        console.log(2);
 
         const rounds = this.auction.Rounds;
         const filledRounds = RoundsMapper.toFilledRounds(this.auction.Rounds);
@@ -208,7 +199,6 @@ export class ESCOAuctionStrategy implements AuctionStrategy {
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
-        console.log(3);
 
         if (rounds.length < 4) {
             throw new HttpException(
@@ -216,7 +206,6 @@ export class ESCOAuctionStrategy implements AuctionStrategy {
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
-        console.log(4);
 
         const roundsForUpdate = rounds
             .filter((round) => {
@@ -225,7 +214,6 @@ export class ESCOAuctionStrategy implements AuctionStrategy {
                 return currentTime < firstBid.startAt;
             })
             .map((round) => ({ ...round }));
-        console.log(5);
 
         const currentRound = filledRounds.find((round) => {
             const firstBid = RoundsMapper.getFirstBidOfRound(round);
@@ -233,31 +221,18 @@ export class ESCOAuctionStrategy implements AuctionStrategy {
 
             return firstBid.startAt < currentTime && lastBid.endAt > currentTime;
         });
-        console.log(6);
 
         if (!currentRound) {
             throw new HttpException('Хід для користувача не знайден', HttpStatus.FORBIDDEN);
         }
 
         const updatedCurrentRound = { ...currentRound };
-        console.log(7);
 
         updatedCurrentRound.Bids = updatedCurrentRound.Bids.map((bid) => {
             if (bid.userId !== userId) {
-                console.log('PZD');
-
                 return bid;
             }
-            console.log('URA');
 
-            console.log(
-                'new total',
-                years,
-                days,
-                Number(cashFlow),
-                percent,
-                BigInt(this.getNPV(years, days, Number(cashFlow), percent)),
-            );
             return {
                 ...bid,
                 total: BigInt(this.getNPV(years, days, Number(cashFlow), percent)),
@@ -268,14 +243,10 @@ export class ESCOAuctionStrategy implements AuctionStrategy {
             };
         });
 
-        console.log(8, roundsForUpdate);
-
         if (roundsForUpdate.length === 0) {
             return [updatedCurrentRound];
         }
-        console.log(9);
 
-        console.log('currentRound', updatedCurrentRound);
         const usersOrder = this.getUserOrderForRound(updatedCurrentRound);
         const fisrtBid = RoundsMapper.getFirstBidOfRounds(roundsForUpdate);
 
@@ -291,7 +262,7 @@ export class ESCOAuctionStrategy implements AuctionStrategy {
 
     async createInitialBid(dto: CreateInitialBidDto, userId: string) {
         const { years, days, percent } = dto;
-        console.log('createInitialBid');
+
         if (!Number.isInteger(years) || !Number.isInteger(days) || !Number.isInteger(percent)) {
             throw new HttpException(
                 'Missed years or days or percent or some of them not integer',

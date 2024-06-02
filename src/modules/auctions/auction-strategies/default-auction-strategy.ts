@@ -125,8 +125,6 @@ export class DefaultAuctionStrategy implements AuctionStrategy {
     }
 
     async makeBid(dto: MakeBidDto, userId: string, currentTime: Date) {
-        console.log('make bid default');
-
         const rounds = this.auction.Rounds;
         const filledRounds = RoundsMapper.toFilledRounds(this.auction.Rounds);
 

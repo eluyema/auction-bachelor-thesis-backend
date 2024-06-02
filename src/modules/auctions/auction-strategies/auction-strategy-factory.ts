@@ -11,13 +11,10 @@ export class AuctionStrategyFactory {
         },
     ): AuctionStrategy {
         if (auction.auctionType === AuctionType.NON_PRICE_CRITERIA) {
-            console.log('???');
             return new NonPriceCriteriaAuctionStrategy(auction);
         } else if (auction.auctionType === AuctionType.ESCO) {
-            console.log('!!!');
             return new ESCOAuctionStrategy(auction);
         }
-        console.log('}}}');
 
         return new DefaultAuctionStrategy(auction);
     }

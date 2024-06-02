@@ -134,7 +134,6 @@ export class NonPriceCriteriaAuctionStrategy implements AuctionStrategy {
     }
 
     async makeBid(dto: MakeBidDto, userId: string, currentTime: Date) {
-        console.log('make bid non price');
         if (!dto.total) {
             throw new HttpException('Missed total', HttpStatus.BAD_REQUEST);
         }

@@ -22,7 +22,6 @@ export class RoundsMapper {
         const lastBidEndAt = lastBid.endAt;
 
         if (currentDate > lastBidEndAt) {
-            console.log('send full access');
             const preparedRounds = rounds.map((round) => {
                 const firstBid = RoundsMapper.getFirstBidOfRound(round);
                 const lastBid = RoundsMapper.getLastBidOfRound(round);
