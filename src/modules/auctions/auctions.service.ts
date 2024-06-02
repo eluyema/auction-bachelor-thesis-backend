@@ -171,7 +171,7 @@ export class AuctionsService {
         if (auction === null) {
             throw new NotFoundException(`Auction with id ${auctionId} doesn't exist`);
         }
-
+        console.log('initial');
         const strategy = AuctionStrategyFactory.getStrategyInstance(auction);
 
         const roundsWithBidsForUpdate = await strategy.createInitialBid(dto, userId);
@@ -215,6 +215,8 @@ export class AuctionsService {
         const auction = await this.auctionsRepository.findAuctionWithRoundsBidsUsers({
             auctionId,
         });
+
+        console.log('hello');
 
         if (auction === null) {
             throw new NotFoundException(`Auction with id ${auctionId} doesn't exist`);

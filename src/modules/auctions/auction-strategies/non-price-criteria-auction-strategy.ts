@@ -134,6 +134,7 @@ export class NonPriceCriteriaAuctionStrategy implements AuctionStrategy {
     }
 
     async makeBid(dto: MakeBidDto, userId: string, currentTime: Date) {
+        console.log('make bid non price');
         if (!dto.total) {
             throw new HttpException('Missed total', HttpStatus.BAD_REQUEST);
         }
@@ -205,18 +206,6 @@ export class NonPriceCriteriaAuctionStrategy implements AuctionStrategy {
         );
 
         return [updatedCurrentRound, ...updatedRounds];
-    }
-
-    private updateBidsOrderInRounds(
-        rounds: Array<Round & { Bid: Array<Bid> }>,
-        usersOrder: string[],
-    ) {
-        for (const round of rounds) {
-            for (const bid of round.Bid) {
-                const sequenceNumber = usersOrder.indexOf(bid.userId);
-                bid.sequenceNumber = sequenceNumber;
-            }
-        }
     }
 
     async createInitialBid(dto: CreateInitialBidDto, userId: string) {
