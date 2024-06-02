@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import { CreateInitialBidDto } from '../dtos/CreateInitialBidDto';
 import { AuctionStrategy } from './auction-strategy';
 import { MakeBidDto } from '../dtos/MakeBidDto';
-import { RoundsMapper } from 'src/modules/rounds/rounds.mapper';
+import { RoundsMapper } from '../../rounds/rounds.mapper';
 
 export class NonPriceCriteriaAuctionStrategy implements AuctionStrategy {
     constructor(
@@ -129,6 +129,7 @@ export class NonPriceCriteriaAuctionStrategy implements AuctionStrategy {
 
             updatedRounds.push(updatedRound);
         }
+
         return updatedRounds;
     }
 
@@ -218,7 +219,7 @@ export class NonPriceCriteriaAuctionStrategy implements AuctionStrategy {
         }
     }
 
-    async createInititalBid(dto: CreateInitialBidDto, userId: string) {
+    async createInitialBid(dto: CreateInitialBidDto, userId: string) {
         const rounds = this.auction.Rounds;
 
         const { firstRoundStartAt, timeForRoundInSecs } = this.auction;

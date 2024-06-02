@@ -163,7 +163,7 @@ export class AuctionsService {
         return auction;
     }
 
-    async createInititalBid(dto: CreateInitialBidDto, userId: string, auctionId: string) {
+    async createInitialBid(dto: CreateInitialBidDto, userId: string, auctionId: string) {
         const auction = await this.auctionsRepository.findAuctionWithRoundsBidsUsers({
             auctionId,
         });
@@ -174,7 +174,7 @@ export class AuctionsService {
 
         const strategy = AuctionStrategyFactory.getStrategyInstance(auction);
 
-        const roundsWithBidsForUpdate = await strategy.createInititalBid(dto, userId);
+        const roundsWithBidsForUpdate = await strategy.createInitialBid(dto, userId);
 
         const userIdsOrder = roundsWithBidsForUpdate
             .find((round) => round.sequenceNumber === 0)

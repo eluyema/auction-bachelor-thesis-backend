@@ -128,7 +128,7 @@ export class AuctionsController {
         @Param('userId') userId: string,
         @Body() dto: CreateInitialBidDto,
     ) {
-        await this.auctionsService.createInititalBid(dto, userId, auctionId);
+        await this.auctionsService.createInitialBid(dto, userId, auctionId);
 
         return createResponseBody('success');
     }

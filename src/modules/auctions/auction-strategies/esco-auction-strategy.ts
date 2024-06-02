@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import { CreateInitialBidDto } from '../dtos/CreateInitialBidDto';
 import { AuctionStrategy } from './auction-strategy';
 import { MakeBidDto } from '../dtos/MakeBidDto';
-import { RoundsMapper } from 'src/modules/rounds/rounds.mapper';
+import { RoundsMapper } from '../../rounds/rounds.mapper';
 
 export class ESCOAuctionStrategy implements AuctionStrategy {
     constructor(
@@ -64,7 +64,7 @@ export class ESCOAuctionStrategy implements AuctionStrategy {
 
         bids.sort((bidA, bidB) => {
             if (bidA.total !== bidB.total) {
-                return Number(bidA.total) - Number(bidB.total);
+                return Number(bidB.total) - Number(bidA.total);
             }
 
             return bidB.totalUpdatedAt.getTime() - bidA.totalUpdatedAt.getTime();
@@ -261,7 +261,7 @@ export class ESCOAuctionStrategy implements AuctionStrategy {
         return [updatedCurrentRound, ...updatedRounds];
     }
 
-    async createInititalBid(dto: CreateInitialBidDto, userId: string) {
+    async createInitialBid(dto: CreateInitialBidDto, userId: string) {
         const { years, days, percent } = dto;
 
         if (!Number.isInteger(years) || !Number.isInteger(days) || !Number.isInteger(percent)) {

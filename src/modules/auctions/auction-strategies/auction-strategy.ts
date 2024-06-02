@@ -2,7 +2,7 @@ import { Bid, Pseudonym, Round, User } from '@prisma/client';
 import { MakeBidDto } from '../dtos/MakeBidDto';
 
 export interface AuctionStrategy {
-    createInititalBid(data: unknown, userId: string): Promise<Array<Round & { Bids: Bid[] }>>;
+    createInitialBid(data: unknown, userId: string): Promise<Array<Round & { Bids: Bid[] }>>;
 
     removeUserFromRounds(userId: string): Promise<Array<Round & { Bids: Bid[] }>>;
 
