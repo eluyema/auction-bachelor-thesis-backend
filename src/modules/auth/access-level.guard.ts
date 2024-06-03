@@ -6,18 +6,17 @@ import { JwtCodedUserData } from './auth.entity';
 export class AccessLevelGuard implements CanActivate {
     constructor(private reflector: Reflector) {}
 
-    matchAccessLevels(accessLevels: string[], userAccessLevel: string) {
-        return accessLevels.some((accessLevel) => accessLevel === userAccessLevel);
-    }
-
     canActivate(context: ExecutionContext): boolean {
-        const accessLevels = this.reflector.get<string[]>('access-levels', context.getHandler());
+        const handler = context.getHandler();
+
+        const accessLevels = this.reflector.get<string[]>('access-levels', handler);
 
         if (!accessLevels) {
             return true;
         }
-        const request = context.switchToHttp().getRequest();
-        const user = request.user as JwtCodedUserData;
-        return this.matchAccessLevels(accessLevels, user.accessLevel);
+
+        const retrivedUser = context.switchToHttp().getRequest().user as JwtCodedUserData;
+
+        return accessLevels.some((accessLevel) => accessLevel === retrivedUser.accessLevel);
     }
 }
